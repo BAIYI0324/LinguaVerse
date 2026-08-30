@@ -1,0 +1,24 @@
+/* 🌙 语界 LinguaVerse · 自定义深色主题示例
+   把这个文件内容复制到 styles.css 最底部(或另存为单独 CSS 引入),
+   立刻变成深色模式,无需改其他代码。
+   用法: v2/index.html 里 <link rel="stylesheet" href="custom-theme.css">
+*/
+:root {
+  --bg:          #0F1419;
+  --surface:     #1A1F26;
+  --surface-2:   #222831;
+  --divider:     rgba(255,255,255,0.08);
+  --text:        #F0F2F5;
+  --text-2:      #B0B8C4;
+  --text-3:      #6B7380;
+  --primary:     #FF8A3D;
+  --primary-soft:rgba(255,138,61,0.12);
+  --success:     #4ADE80;
+  --warning:     #FACC15;
+  --danger:      #F87171;
+  --shadow-1:    0 1px 2px rgba(0,0,0,0.5);
+  --shadow-2:    0 4px 12px rgba(0,0,0,0.5);
+  --shadow-3:    0 8px 24px rgba(0,0,0,0.6);
+}
+.phone::before { background: linear-gradient(135deg, #1A1F26, #0F1419); }
+.word-card,.card,.stat-card,.lesson-card,.badge-card,.set-group { background: var(--surface); border-color: var(--divider); }
