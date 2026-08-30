@@ -1,0 +1,74 @@
+# ===================== OS =====================
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+Desktop.ini
+
+# ===================== Editors/IDE =====================
+.vscode/*
+!.vscode/extensions.json
+!.vscode/settings.json
+.idea/
+*.iml
+*.iws
+*.ipr
+*.swp
+*.swo
+*~
+.project
+.classpath
+.settings/
+
+# ===================== Logs =====================
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+pnpm-debug.log*
+
+# ===================== Dependency / build caches =====================
+node_modules/
+.pnp
+.pnp.js
+.yarn/cache
+.yarn/unplugged
+.pnpm-store/
+.cache/
+.parcel-cache/
+.eslintcache
+.stylelintcache
+
+# ===================== Output / generated =====================
+dist/
+build/
+out/
+output/
+coverage/
+*.local
+.env
+.env.*
+!.env.example
+
+# ===================== Android =====================
+android/build/
+android/.gradle/
+android/local.properties
+android/captures/
+
+# ===================== Python dev venv =====================
+venv/
+.venv/
+__pycache__/
+*.py[cod]
+
+# ===================== Project-specific =====================
+exports/*.json
+data-backups/*.json
+*.backup.json
+tmp/
+temp/
+*.tmp

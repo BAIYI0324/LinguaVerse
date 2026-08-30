@@ -1,0 +1,26 @@
+# Auto normalize line endings
+* text=auto eol=lf
+
+# Explicitly declare source types
+*.html   text
+*.css    text
+*.js     text
+*.json   text
+*.md     text diff=markdown
+*.sh     text eol=lf
+*.xml    text
+*.java   text
+*.yml    text
+*.yaml   text
+
+# Binary
+*.png    binary
+*.jpg    binary
+*.jpeg   binary
+*.gif    binary
+*.ico    binary
+*.apk    binary
+*.aab    binary
+*.jar    binary
+*.keystore binary
+*.zip    binary

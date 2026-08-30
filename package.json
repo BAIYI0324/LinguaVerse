@@ -1,0 +1,43 @@
+{
+  "name": "linguaverse",
+  "version": "2.0.1",
+  "private": false,
+  "description": "语界 LinguaVerse · 四六级英语·日语·韩语学习平台 | MIUIX 设计 | 不背单词式词卡 | 纯本地数据 | Web PWA + 安卓 APK",
+  "license": "MIT",
+  "author": "CHANG (BAIYI0324)",
+  "keywords": [
+    "language-learning",
+    "english",
+    "cet4",
+    "cet6",
+    "japanese",
+    "korean",
+    "spaced-repetition",
+    "srs",
+    "pwa",
+    "android-apk",
+    "webview",
+    "offline-first",
+    "miuix"
+  ],
+  "homepage": "https://github.com/BAIYI0324/LinguaVerse",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/BAIYI0324/LinguaVerse.git"
+  },
+  "bugs": {
+    "url": "https://github.com/BAIYI0324/LinguaVerse/issues"
+  },
+  "scripts": {
+    "dev": "python3 -m http.server 8080 --directory ./v2",
+    "dev:v1": "python3 -m http.server 8081 --directory ./v1",
+    "serve": "python3 -m http.server 8080 --directory ./v2",
+    "build:apk": "bash ./android/build.sh",
+    "lint:js": "node --check ./v2/js/app.js && node --check ./v2/js/data.js && node --check ./v1/js/app.js && node --check ./v1/js/data.js && echo 'all JS syntax OK'",
+    "verify": "npm run lint:js && test -f ./v2/index.html && test -f ./v2/manifest.json && test -f ./android/build.sh && echo 'artifacts verified'"
+  },
+  "engines": {
+    "node": ">=16",
+    "python": ">=3.8"
+  }
+}
