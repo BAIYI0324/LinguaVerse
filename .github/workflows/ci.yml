@@ -1,0 +1,47 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+
+jobs:
+  verify:
+    name: 语法 & 产物校验
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: 使用 Node.js 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: JS 语法检查
+        run: |
+          node --check ./v2/js/app.js
+          node --check ./v2/js/data.js
+          node --check ./v1/js/app.js
+          node --check ./v1/js/data.js
+          echo "✅ 所有 JS 语法通过"
+
+      - name: 关键产物存在性
+        run: |
+          test -f ./v2/index.html
+          test -f ./v2/css/styles.css
+          test -f ./v2/js/app.js
+          test -f ./v2/js/data.js
+          test -f ./v2/manifest.json
+          test -f ./v2/sw.js
+          test -f ./android/AndroidManifest.xml
+          test -f ./android/build.sh
+          test -f ./android/java/com/yujie/app/MainActivity.java
+          echo "✅ 所有关键产物存在"
+
+      - name: JSON 有效性
+        run: |
+          node -e "JSON.parse(require('fs').readFileSync('./package.json'))"
+          node -e "JSON.parse(require('fs').readFileSync('./v2/manifest.json'))"
+          echo "✅ package.json / manifest.json JSON 合法"

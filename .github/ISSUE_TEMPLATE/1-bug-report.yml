@@ -1,0 +1,60 @@
+name: "🐞 Bug 反馈"
+description: "提交运行/显示/数据相关的错误"
+labels: [bug, triage]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        感谢提交 Bug!请尽量提供完整信息,我们才能更快定位。
+  - type: textarea
+    id: reproduce
+    attributes:
+      label: 复现步骤
+      description: 一步步告诉我们如何看到这个问题
+      placeholder: |
+        1. 打开「词书」Tab
+        2. 点击 CET-6 → 六级核心词汇 → 单词卡
+        3. 点到第 7 张卡时,翻面后例句区空白
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: 期望行为
+      placeholder: 翻面后应显示真题例句「He abandoned his plan.」及译文
+  - type: dropdown
+    id: env
+    attributes:
+      label: 运行环境
+      multiple: false
+      options:
+        - "安卓 APK (真机型号 & Android 版本:例如 Xiaomi 13 / Android 14)"
+        - "Chrome 桌面浏览器 (版本:xxx)"
+        - "Safari iOS (版本:xxx)"
+        - "微信内置浏览器"
+        - "其他(请在下方描述)"
+    validations:
+      required: true
+  - type: textarea
+    id: console
+    attributes:
+      label: 控制台日志 / 截图
+      description: 粘贴浏览器控制台 error 或上传截图,帮助定位
+      render: shell
+  - type: dropdown
+    id: severity
+    attributes:
+      label: 严重程度
+      options:
+        - "💥 阻塞:无法使用核心功能"
+        - "🔥 严重:功能损坏但有绕行方案"
+        - "🔧 一般:小 bug / UI 错位 / 文案错误"
+        - "💡 轻微:纯建议类"
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: "版本"
+      description: "APK 版本号 / commit SHA"
+      placeholder: "v2.0.0 或 4c811c7"

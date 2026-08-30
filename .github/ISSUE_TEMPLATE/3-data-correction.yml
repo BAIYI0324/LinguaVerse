@@ -1,0 +1,39 @@
+name: "📚 词汇/内容纠错"
+description: "音标、释义、例句、翻译错误请在这里提交"
+labels: [data, triage]
+body:
+  - type: dropdown
+    id: course
+    attributes:
+      label: 课程位置
+      options:
+        - "英语 CET-4 四级"
+        - "英语 CET-6 六级"
+        - "日语 N5 / N4"
+        - "韩语 TOPIK I / TOPIK II"
+        - "其他 / 不确定"
+    validations:
+      required: true
+  - type: input
+    id: unit
+    attributes:
+      label: "单元 / 课"
+      placeholder: "如:en-c4-u2-v 校园学术词汇"
+  - type: input
+    id: word
+    attributes:
+      label: "单词 / 条目"
+      placeholder: "如:contribute"
+  - type: textarea
+    id: wrong
+    attributes:
+      label: 现有内容 (错误部分)
+    validations:
+      required: true
+  - type: textarea
+    id: correct
+    attributes:
+      label: 你建议的正确内容
+      description: 如有参考来源(词典、真题来源)请一并附上
+    validations:
+      required: true

@@ -1,0 +1,17 @@
+# 全局默认代码所有人
+*                 @BAIYI0324
+
+# 数据与词库由数据维护组负责
+/v2/js/data.js    @BAIYI0324
+/v1/js/data.js    @BAIYI0324
+
+# UI / 样式
+/v2/css/          @BAIYI0324
+/v1/css/          @BAIYI0324
+
+# 安卓 APK 工程
+/android/         @BAIYI0324
+
+# 文档
+/docs/            @BAIYI0324
+*.md              @BAIYI0324

@@ -1,0 +1,35 @@
+name: "✨ 功能/内容建议"
+description: "新功能、新课程、新语种、UI 改进都在这里提"
+labels: [enhancement, triage]
+body:
+  - type: dropdown
+    id: kind
+    attributes:
+      label: 类型
+      options:
+        - "📚 新增课程/词库 (四六级高频词、考研词汇、N2、TOPIK IV 等)"
+        - "🧠 学习功能 (新卡片模式、AI 批改、真人发音下载等)"
+        - "🎨 UI / 交互改进"
+        - "📱 平台支持 (iOS、鸿蒙、桌面端)"
+        - "♿️ 无障碍 / 国际化"
+        - "其他"
+    validations:
+      required: true
+  - type: textarea
+    id: problem
+    attributes:
+      label: 痛点 / 问题
+      description: 请描述你在使用中遇到的不方便之处,而不是「想要什么」
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: 你期望的效果
+      placeholder: |
+        例:希望 CET-4 再增加 500 个高频词,并标出「四六级真题出现次数」
+  - type: textarea
+    id: extra
+    attributes:
+      label: 参考资料 / 截图
+      description: 例句资源、竞品截图、相关论文链接等

@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+contact_links:
+  - name: "💬 讨论 & 想法 (Discussion)"
+    url: https://github.com/BAIYI0324/LinguaVerse/discussions
+    about: "通用讨论、功能头脑风暴、贡献想法请先去这里。"
+  - name: "📖 README / 文档"
+    url: https://github.com/BAIYI0324/LinguaVerse#readme
+    about: "先阅读 README 看是否已有答案。"
