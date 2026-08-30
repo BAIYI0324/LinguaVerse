@@ -1,0 +1,83 @@
+/* 语界 v1 · 普通UI: 白底 + 蓝色主色 + 顶部导航 */
+*{margin:0;padding:0;box-sizing:border-box}
+body{font-family:-apple-system,BlinkMacSystemFont,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif;background:#f5f7fa;color:#333;line-height:1.6}
+a{text-decoration:none;color:inherit}
+
+/* 顶部导航 */
+.nav{background:#fff;border-bottom:1px solid #e4e7ed;padding:0 24px;height:60px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:100;box-shadow:0 1px 4px rgba(0,0,0,.04)}
+.nav-brand{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;color:#409EFF}
+.nav-brand .logo{width:34px;height:34px;border-radius:10px;background:linear-gradient(135deg,#409EFF,#67C23A);display:grid;place-items:center;color:#fff;font-size:18px}
+.nav-links{display:flex;gap:4px}
+.nav-links a{padding:8px 18px;border-radius:8px;color:#606266;font-weight:600;font-size:14px;transition:all .15s}
+.nav-links a:hover{background:#ecf5ff;color:#409EFF}
+.nav-links a.active{background:#409EFF;color:#fff}
+.nav-user{display:flex;align-items:center;gap:10px;font-size:14px}
+.nav-user .avatar{width:32px;height:32px;border-radius:50%;background:#409EFF;color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px}
+.nav-user button{border:none;background:#f5f7fa;padding:6px 14px;border-radius:6px;font-size:13px;cursor:pointer;color:#606266}
+.nav-user button:hover{background:#fef0f0;color:#f56c6c}
+
+/* 主容器 */
+.container{max-width:1100px;margin:0 auto;padding:28px 24px}
+
+/* 登录/注册 */
+.auth-wrap{min-height:calc(100vh - 60px);display:grid;place-items:center;padding:40px 20px;background:linear-gradient(135deg,#eaf2ff 0%,#f0f9eb 100%)}
+.auth-card{background:#fff;width:100%;max-width:420px;border-radius:16px;padding:36px 32px;box-shadow:0 8px 32px rgba(64,158,255,.12)}
+.auth-card h1{text-align:center;font-size:26px;margin-bottom:6px;color:#303133}
+.auth-card .sub{text-align:center;color:#909399;font-size:13px;margin-bottom:28px}
+.auth-tabs{display:flex;margin-bottom:24px;background:#f5f7fa;border-radius:10px;padding:4px}
+.auth-tabs button{flex:1;padding:10px 0;border:none;background:none;border-radius:8px;font-weight:700;color:#909399;cursor:pointer;font-size:14px}
+.auth-tabs button.active{background:#fff;color:#409EFF;box-shadow:0 2px 6px rgba(0,0,0,.06)}
+.auth-field{margin-bottom:18px}
+.auth-field label{display:block;font-size:13px;font-weight:700;color:#606266;margin:0 2px 8px}
+.auth-field input{width:100%;height:46px;border:1px solid #dcdfe6;border-radius:10px;padding:0 16px;font-size:15px;transition:border-color .15s;outline:none}
+.auth-field input:focus{border-color:#409EFF;box-shadow:0 0 0 3px rgba(64,158,255,.12)}
+.btn-primary{width:100%;height:48px;background:#409EFF;color:#fff;border:none;border-radius:10px;font-size:15px;font-weight:700;cursor:pointer;transition:background .15s}
+.btn-primary:hover{background:#66b1ff}
+.btn-primary:active{transform:scale(.98)}
+.auth-tip{text-align:center;font-size:12px;color:#c0c4cc;margin-top:16px}
+
+/* 首页 */
+.hero{background:linear-gradient(135deg,#409EFF,#67C23A);color:#fff;border-radius:20px;padding:48px 40px;margin-bottom:28px}
+.hero h1{font-size:32px;margin-bottom:10px;font-weight:900}
+.hero p{font-size:15px;opacity:.9;max-width:600px;line-height:1.8}
+.hero .hero-stats{display:flex;gap:36px;margin-top:28px}
+.hero .hs{background:rgba(255,255,255,.18);backdrop-filter:blur(10px);border-radius:12px;padding:14px 22px}
+.hero .hs b{font-size:24px;display:block;font-weight:900}
+.hero .hs span{font-size:12px;opacity:.85}
+
+.section-title{display:flex;align-items:center;gap:10px;font-size:20px;font-weight:800;margin:24px 0 16px;color:#303133}
+.section-title::before{content:"";width:4px;height:20px;background:#409EFF;border-radius:4px}
+
+.lang-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-bottom:24px}
+.lang-card{background:#fff;border-radius:14px;padding:20px;box-shadow:0 2px 12px rgba(0,0,0,.04);cursor:pointer;transition:all .15s;border:2px solid transparent}
+.lang-card:hover{transform:translateY(-2px);border-color:#409EFF;box-shadow:0 6px 20px rgba(64,158,255,.15)}
+.lang-card .flag{font-size:36px;margin-bottom:10px}
+.lang-card h3{font-size:17px;font-weight:800;margin-bottom:4px}
+.lang-card p{font-size:12px;color:#909399}
+.lang-card .lv{display:inline-block;margin-top:10px;background:#ecf5ff;color:#409EFF;font-size:11px;padding:4px 10px;border-radius:999px;font-weight:700}
+
+/* 学习页 */
+.tabs-row{display:flex;gap:6px;margin-bottom:20px;flex-wrap:wrap}
+.tabs-row button{padding:8px 18px;border:none;background:#fff;border-radius:10px;font-size:13px;font-weight:700;color:#606266;cursor:pointer;border:1px solid #e4e7ed;transition:all .15s}
+.tabs-row button.active{background:#409EFF;color:#fff;border-color:#409EFF}
+.level-select{display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap}
+.level-select button{padding:8px 14px;background:#fff;border:1px solid #e4e7ed;border-radius:10px;font-size:13px;cursor:pointer;color:#606266;font-weight:600}
+.level-select button.active{background:#67C23A;color:#fff;border-color:#67C23A}
+.unit-card{background:#fff;border-radius:14px;padding:20px;margin-bottom:14px;box-shadow:0 2px 8px rgba(0,0,0,.03)}
+.unit-card h3{font-size:16px;font-weight:800;margin-bottom:4px;color:#303133}
+.unit-card .u-desc{font-size:12px;color:#909399;margin-bottom:14px}
+.lesson-list{display:grid;gap:8px}
+.lesson-item{display:flex;align-items:center;gap:12px;padding:12px 14px;background:#f5f7fa;border-radius:10px;cursor:pointer;transition:all .12s}
+.lesson-item:hover{background:#ecf5ff}
+.lesson-item .li-ic{width:38px;height:38px;border-radius:10px;background:#ecf5ff;color:#409EFF;display:grid;place-items:center;font-size:18px;flex-shrink:0}
+.lesson-item.g-grammar .li-ic{background:#fdf6ec;color:#e6a23c}
+.lesson-item.g-listening .li-ic{background:#f0f9eb;color:#67C23A}
+.lesson-item.g-speaking .li-ic{background:#fef0f0;color:#f56c6c}
+.lesson-item .li-body{flex:1}
+.lesson-item .li-title{font-size:14px;font-weight:700;color:#303133}
+.lesson-item .li-meta{font-size:11px;color:#909399;margin-top:2px}
+.lesson-item .li-xp{font-size:12px;font-weight:800;color:#67C23A;background:#f0f9eb;padding:3px 10px;border-radius:999px}
+
+/* Toast */
+.toast{position:fixed;top:80px;left:50%;transform:translateX(-50%);background:rgba(64,158,255,.95);color:#fff;padding:10px 22px;border-radius:10px;font-size:14px;font-weight:600;z-index:999;animation:toastIn .25s ease;box-shadow:0 4px 16px rgba(64,158,255,.3)}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(-10px)}to{opacity:1;transform:translateX(-50%)}}
