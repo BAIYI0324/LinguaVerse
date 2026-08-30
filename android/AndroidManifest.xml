@@ -1,24 +1,15 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.yujie.app"
-    android:versionCode="4"
-    android:versionName="2.1.0">
+    android:versionCode="5"
+    android:versionName="4.0.0">
 
-  <!-- 基础权限 -->
-  <uses-permission android:name="android.permission.INTERNET"/>                    <!-- 在线词典音频CDN -->
-  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>       <!-- 判在线/离线 -->
-  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>         <!-- TTS -->
-  <uses-permission android:name="android.permission.RECORD_AUDIO"/>               <!-- 口语跟读识别 (可选) -->
-  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>      <!-- 调节 TTS -->
-  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>           <!-- T(13)+ 媒体 -->
+  <!-- 语界 v4.0 纯内置离线版: 运行不依赖任何外部服务/系统TTS软件
+       保留 INTERNET 权限为可选联网功能 (例如用户手动上传词典/备份), 离线学习完全不依赖它。
+       其余 TTS / 麦克风相关权限已全部移除,真正做到"安装即用"。 -->
+  <uses-permission android:name="android.permission.INTERNET"/>
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
-
-  <queries>
-    <!-- TextToSpeech 引擎查询 (Android 11+) -->
-    <intent>
-      <action android:name="android.intent.action.TTS_SERVICE"/>
-    </intent>
-  </queries>
 
   <application
       android:label="语界"

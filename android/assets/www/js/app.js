@@ -1,10 +1,10 @@
 /* ============================================================
-   语界 · 应用逻辑  v3.0
+   语界 · 应用逻辑  v4.0
    本地账号 · 不背单词式词卡 · SRS 间隔复习 · 澎湃美学 UI
-   🔊 发音(三层回退):
-      ① 安卓 NativeTTS JSBridge (存在就优先, 不再等就绪回调)
-      ② 在线词典 CDN mp3 <audio>直连 + IndexedDB缓存(有网音质最好,离线可放缓存)
-      ③ 浏览器 speechSynthesis
+   🔊 发音（完全内置，零外部依赖）:
+      ① meSpeak.js 纯 JS eSpeak Emscripten 合成 WAV （不依赖任何已安装TTS软件/系统服务）
+      ② 首次合成后 WAV Blob 永久缓存到 IndexedDB, 下次命中秒开
+      ③ 不再联网请求词典 CDN, 不调用安卓系统 TTS
    ✨ 体验: 左右滑动翻卡 / 长按发音 / 自动朗读 / 首页一键继续
    ============================================================ */
 'use strict';
@@ -33,7 +33,17 @@ function normWord(lessonId, raw){
 }
 function lessonWords(lessonId){
   const c = CONTENT[lessonId];
-  return c && c.words ? c.words.map(w => normWord(lessonId, w)) : [];
+  if(c && c.words && c.words.length) return c.words.map(w => normWord(lessonId, w));
+  // v4.0 词库范围查询: 四六级扩充词库由 data_words_patch.js 的 *LESSONS_RANGE 提供切片
+  const rangeMap = (window.CET4_LESSONS_RANGE && window.CET4_LESSONS_RANGE[lessonId] && [window.CET4_WORDS, window.CET4_LESSONS_RANGE[lessonId]])
+                || (window.CET6_LESSONS_RANGE && window.CET6_LESSONS_RANGE[lessonId] && [window.CET6_WORDS, window.CET6_LESSONS_RANGE[lessonId]]);
+  if(rangeMap){
+    const [arr, rng] = rangeMap;
+    if(arr && Array.isArray(rng)){
+      return arr.slice(rng[0], rng[1]).map(w => normWord(lessonId, w));
+    }
+  }
+  return [];
 }
 
 /* ---------- 本地数据库 ---------- */
@@ -94,43 +104,112 @@ function haptic(strength){
     else navigator.vibrate(5);
   }catch(e){}
 }
-
 /* ============================================================
-   🔊 语音 · 三层回退方案 (v3.0 修复版)
-   优先级:
-     ① 安卓 NativeTTS JSBridge (只要 window.NativeTTS 存在就调用,不再依赖 ttsNative 标志)
-     ② 英语单词 → CDN mp3: 先用 <audio> 直连 URL 绕开 CORS → 成功后异步缓存到 IndexedDB
-     ③ 兜底: Web Speech API speechSynthesis
+   🔊 语音 · 纯内置 meSpeak (零外部服务)
    ============================================================ */
+/* meSpeak 引导层 */
+const ME = {
+  ready: false,
+  initAttempt: false,
+  rate: 170,       // eSpeak wpm, 英/美默认 175 左右
+  pitch: 60,       // 0-99
+  vol: 1,
+  audioEl: null,
+  voiceLoaded: {en:false, zh:false, ja:false, ko:false},
+  ensure(){
+    if(this.ready) return true;
+    if(!this.initAttempt){
+      this.initAttempt = true;
+      try{
+        const ms = window.mespeak || window.meSpeak;
+        if(!ms) return false;
+        const cfg = window.MESPEAK_CONFIG;
+        if(cfg && ms.loadConfig){ try{ ms.loadConfig(cfg); }catch(_){} }
+        // 英语(美音) + 英语RP + 中文(普通话) 语音预置
+        if(window.VOICE_EN_US){ try{ ms.loadVoice(window.VOICE_EN_US); this.voiceLoaded.en = true; ms.setDefaultVoice && ms.setDefaultVoice('en-us'); }catch(_){} }
+        if(window.VOICE_ZH   ){ try{ ms.loadVoice(window.VOICE_ZH);    this.voiceLoaded.zh = true; }catch(_){} }
+        if(window.VOICE_EN_RP){ try{ ms.loadVoice(window.VOICE_EN_RP); }catch(_){} }
+        this.ready = !!(ms && ms.speak && ms.isConfigLoaded && ms.isConfigLoaded());
+      }catch(e){ this.ready = false; }
+    }
+    return this.ready;
+  },
+  /** 将 meSpeak 参数映射成不同语言的 voice + 语速 */
+  langToVoice(langId, accent){
+    if(langId === 'en'){
+      if(accent === 'british' && this.voiceLoaded.en) return {voice:undefined, variant:undefined}; // RP 默认音
+      return {voice:undefined, variant:undefined}; // 已default 是en-us
+    }
+    if(langId === 'zh') return {voice:'zh', variant:undefined};
+    if(langId === 'ja') return {voice:undefined, variant:undefined}; // meSpeak内没ja, 走内部eSpeak ja音(若可用)
+    if(langId === 'ko') return {voice:undefined, variant:undefined};
+    return {voice:undefined, variant:undefined};
+  },
+  synthesize(text, langId, userRate){
+    this.ensure();
+    const ms = window.mespeak || window.meSpeak;
+    if(!ms || !this.ready) return null;
+    try{
+      const opts = { rawdata: true };
+      opts.speed = Math.max(80, Math.min(400, Math.round(170 * (userRate || 1))));
+      opts.pitch = this.pitch;
+      opts.amplitude = Math.max(20, Math.min(200, Math.round(200 * this.vol)));
+      // 语言voice
+      if(langId === 'zh' && this.voiceLoaded.zh) opts.voice = 'zh';
+      if(langId === 'en') {
+        // 无特殊voice, 用已默认的en-us; 但日语/韩语如果内置 eSpeak 支持,可以传voice
+      }
+      const ab = ms.speak(text, opts);
+      if(!ab) return null;
+      // 转 Uint8Array -> Blob (audio/wav)
+      const u8 = (ab instanceof Uint8Array) ? ab : new Uint8Array(ab);
+      return new Blob([u8], {type:'audio/wav'});
+    }catch(e){
+      return null;
+    }
+  },
+  playBlob(blob, rate){
+    return new Promise(res=>{
+      try{
+        if(!this.audioEl) this.audioEl = new Audio();
+        const a = this.audioEl;
+        try{ if(!a.paused) a.pause(); }catch(_){}
+        const old = a.src;
+        a.src = URL.createObjectURL(blob);
+        if(old) try{ URL.revokeObjectURL(old); }catch(_){}
+        a.playbackRate = rate || 1;
+        let done=false;
+        const f=(ok)=>{ if(done)return; done=true; try{URL.revokeObjectURL(a.src);}catch(_){} res(!!ok); };
+        a.onended = ()=>f(true); a.onerror = ()=>f(false);
+        const p = a.play();
+        if(p && p.catch) p.catch(()=>f(false));
+        setTimeout(()=>f(false), 15000);
+      }catch(e){ res(false); }
+    });
+  },
+  stop(){
+    try{ if(this.audioEl) this.audioEl.pause(); }catch(_){}
+    const ms = window.mespeak || window.meSpeak;
+    if(ms && ms.resetQueue) try{ ms.resetQueue(); }catch(_){}
+    if(ms && ms.stop) try{ ms.stop(); }catch(_){}
+  }
+};
+
 const AUD = {
   idb: null,
   dbReady: false,
-  netMode: true,
-  ttsNative: false,   // __ttsReady 回调后置 true, 但不作为是否调用的前提
-  audioEl: null,
-  cacheName: 'yujie-audio-v1',
-  cdnUrl(word, type){
-    const w = encodeURIComponent(word);
-    const t = type==='uk' ? 1 : 2;
-    return [
-      `https://dict.youdao.com/dictvoice?audio=${w}&type=${t}`,
-      `https://shared.youdao.com/dict/market/audio/dict/${type==='uk'?'uk':'us'}/${encodeURIComponent((word[0]||'a').toLowerCase())}/${w}.mp3`,
-      `https://cdn.dict.cn/audio/${w}.mp3`,
-    ];
-  },
+  // netMode 仍保留但发音不再使用, 保留用于未来词包更新等(非TTS)用途
+  netMode: (typeof navigator !== 'undefined' && navigator.onLine !== false),
   async openDB(){
     if(this.dbReady) return this.idb;
-    return new Promise((res)=>{
+    return new Promise(res=>{
       try{
         const req = indexedDB.open('yujie_audio', 1);
         req.onupgradeneeded = e => {
-          try{
-            const db = e.target.result;
-            if(!db.objectStoreNames.contains('blobs')) db.createObjectStore('blobs', {keyPath:'k'});
-          }catch(_){}
+          try{ const db = e.target.result; if(!db.objectStoreNames.contains('blobs')) db.createObjectStore('blobs', {keyPath:'k'}); }catch(_){}
         };
         req.onsuccess = e => { this.idb = e.target.result; this.dbReady = true; res(this.idb); };
-        req.onerror = () => { this.dbReady = false; res(null); };
+        req.onerror = () => res(null);
       }catch(e){ res(null); }
     });
   },
@@ -146,107 +225,17 @@ const AUD = {
       }catch(e){ res(null); }
     });
   },
-  async blobPut(k, blob){
+  async blobPut(k, b){
     try{
       await this.openDB();
       if(!this.idb) return;
       const tx = this.idb.transaction('blobs','readwrite');
-      tx.objectStore('blobs').put({k, b:blob});
+      tx.objectStore('blobs').put({k, b});
     }catch(e){}
   },
-  /** 通过 fetch 拉 CDN (会受 CORS 限制) */
-  async fetchCdn(urls){
-    for(const url of urls){
-      try{
-        const r = await fetch(url, {method:'GET', mode:'cors', credentials:'omit', cache:'force-cache'});
-        if(r.ok && r.status < 400){
-          const blob = await r.blob();
-          if(blob && blob.size > 200) return {blob, url};
-        }
-      }catch(e){}
-    }
-    return null;
-  },
-  /** 播放 Blob */
-  playBlob(blob, rate){
-    return new Promise((res)=>{
-      try{
-        if(!this.audioEl) this.audioEl = new Audio();
-        const a = this.audioEl;
-        try{ if(!a.paused){ a.pause(); } }catch(_){}
-        const old = a.src;
-        a.src = URL.createObjectURL(blob);
-        if(old) try{ URL.revokeObjectURL(old); }catch(_){}
-        a.playbackRate = rate || 1;
-        let done=false;
-        const finish = (ok)=>{ if(done)return; done=true; try{URL.revokeObjectURL(a.src);}catch(_){} res(!!ok); };
-        a.onended = ()=>finish(true);
-        a.onerror = ()=>finish(false);
-        const p = a.play();
-        if(p && p.catch) p.catch(()=>finish(false));
-        setTimeout(()=>finish(false), 12000);
-      }catch(e){ res(false); }
-    });
-  },
-  /** 播放远程 URL (绕过 CORS, 音质直接走浏览器音频栈) - 成功后异步fetch缓存 */
-  playUrl(url, rate, cacheKey){
-    return new Promise((res)=>{
-      try{
-        if(!this.audioEl) this.audioEl = new Audio();
-        const a = this.audioEl;
-        try{ if(!a.paused){ a.pause(); } }catch(_){}
-        a.src = url;
-        a.playbackRate = rate || 1;
-        a.crossOrigin = 'anonymous';   // 尽量尝试, 不行也能放
-        let done=false;
-        const finish = (ok)=>{ if(done)return; done=true; res(!!ok); };
-        a.onended = ()=>{
-          finish(true);
-          // 播放成功 → 异步缓存到 IndexedDB (仅当联网)
-          if(cacheKey && AUD.netMode){
-            fetch(url, {mode:'cors', credentials:'omit', cache:'force-cache'})
-              .then(r=>{ if(r.ok) return r.blob(); throw 0; })
-              .then(b=>{ if(b && b.size>200) AUD.blobPut(cacheKey, b); })
-              .catch(()=>{});
-          }
-        };
-        a.onerror = ()=>finish(false);
-        const p = a.play();
-        if(p && p.catch) p.catch(()=>finish(false));
-        setTimeout(()=>finish(false), 12000);
-      }catch(e){ res(false); }
-    });
-  },
-  speakBrowser(text, langId, rate){
-    return new Promise(res=>{
-      try{
-        if(!('speechSynthesis' in window)) { res(false); return; }
-        try{ speechSynthesis.cancel(); }catch(_){}
-        const u = new SpeechSynthesisUtterance(text);
-        u.lang = (LANGUAGES[langId] && LANGUAGES[langId].ttsLang) || 'en-US';
-        u.rate = rate || 1;
-        u.pitch = 1;
-        u.volume = 1;
-        try{
-          const voices = speechSynthesis.getVoices && speechSynthesis.getVoices();
-          if(voices && voices.length){
-            const pref = voices.find(v=>v.lang && v.lang===u.lang && /Google|Microsoft|Samantha/i.test(v.name)) ||
-                         voices.find(v=>v.lang && v.lang===u.lang) || voices[0];
-            if(pref) u.voice = pref;
-          }
-        }catch(_){}
-        let done=false;
-        const finish = (ok)=>{ if(done)return; done=true; res(!!ok); };
-        u.onend = ()=>finish(true);
-        u.onerror = ()=>finish(false);
-        speechSynthesis.speak(u);
-        setTimeout(()=>finish(false), 12000);
-      }catch(e){ res(false); }
-    });
-  }
 };
 
-/* ---------- 公共 speak() 入口 (v3.0 修复版) ---------- */
+/* ---------- 公共 speak() 入口（零外部依赖） ---------- */
 let _speaking = false;
 async function speak(text, langId, rate, opts){
   try{
@@ -254,101 +243,66 @@ async function speak(text, langId, rate, opts){
     opts = opts || {};
     rate = rate || (U && U.ttsRate) || 1;
     langId = langId || (U && U.lang) || 'en';
-    // 先终止所有正在发音的
+    // 停止之前的发音
     if(_speaking){
-      try{ if(window.NativeTTS && window.NativeTTS.stop) window.NativeTTS.stop(); }catch(_){}
-      try{ if(AUD.audioEl) AUD.audioEl.pause(); }catch(_){}
-      try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(_){}
+      try{ ME.stop(); }catch(_){}
     }
     _speaking = true;
-    let ok = false;
     const source = opts.source || 'word';
+    const accent = (U && U.accent) || '';
+    const textNorm = typeof text === 'string' ? text.trim() : String(text || '').trim();
+    if(!textNorm) return false;
 
-    // ----- ① 安卓 NativeTTS JSBridge: 只要 window.NativeTTS 存在就优先调用 -----
-    // (不再等 __ttsReady, 因为 JSBridge 注入时已经可用, 只是 tts.init 异步而已)
-    if(window.NativeTTS && typeof window.NativeTTS.speak === 'function'){
-      try{
-        const ttsLang = (LANGUAGES[langId] && LANGUAGES[langId].ttsLang) || 'en-US';
-        window.NativeTTS.speak(text, ttsLang, rate);
-        ok = true;
-        // 稍微等待保证 TTS 线程已启动后再解锁 _speaking
-        await delay(260);
-      }catch(e){ ok = false; }
-    }
+    let ok = false;
+    let blob = null;
 
-    // ----- ② 英语单词 → CDN mp3 (先查缓存 → 再 <audio>直连 URL 绕开 CORS → fetch成功后缓存) -----
-    if(!ok && source === 'word' && langId === 'en' && typeof text === 'string' && /[a-zA-Z]/.test(text)){
-      const key = 'en::' + text.toLowerCase().trim();
-      // 2a: IndexedDB 缓存命中 → 直接播放 blob
-      let blob = await AUD.blobGet(key);
-      if(blob){
-        try{ ok = await AUD.playBlob(blob, rate); }catch(e){ ok=false; }
+    // ---- ① IndexedDB 缓存命中 ----
+    if(source === 'word' || source === 'sentence'){
+      const cacheKey = langId + '::' + (rate===1 ? '' : rate+'::') + textNorm.toLowerCase();
+      blob = await AUD.blobGet(cacheKey);
+      if(blob && blob.size > 200){
+        try{
+          ok = await ME.playBlob(blob, rate);
+        }catch(e){ ok=false; blob=null; }
       }
-      // 2b: 未命中但联网 → <audio> 直连 URL 播放 (不受 CORS 限制), 成功后异步缓存
-      if(!ok && AUD.netMode){
-        const urls = AUD.cdnUrl(text, (U && U.accent==='british')?'uk':'us');
-        for(const u of urls){
-          try{
-            ok = await AUD.playUrl(u, rate, key);
-            if(ok) break;
-          }catch(e){ ok=false; }
+      // ---- ② meSpeak.js 纯 JS 合成 WAV, 缓存并播放 ----
+      if(!ok){
+        blob = ME.synthesize(textNorm, langId, rate);
+        if(blob && blob.size > 200){
+          // 异步写缓存(不阻塞播放)
+          AUD.blobPut(cacheKey, blob).catch(()=>{});
+          try{ ok = await ME.playBlob(blob, 1); }catch(e){ ok=false; }
         }
-        // 2c: URL播放失败(CORS/服务挂) → 再试一次 fetch + playBlob (少数CDN允许CORS)
-        if(!ok){
-          const r = await AUD.fetchCdn(urls);
-          if(r){
-            blob = r.blob;
-            await AUD.blobPut(key, blob);
-            try{ ok = await AUD.playBlob(blob, rate); }catch(e){ ok=false; }
-          }
-        }
+      }
+    } else {
+      // 非词/句类型(长文/口语题)直接合成, 缓存整句
+      blob = ME.synthesize(textNorm, langId, rate);
+      if(blob && blob.size > 200){
+        try{ ok = await ME.playBlob(blob, 1); }catch(e){ ok=false; }
       }
     }
 
-    // ----- ③ 兜底: Web Speech API speechSynthesis -----
-    if(!ok){
-      try{ ok = await AUD.speakBrowser(text, langId, rate); }catch(e){ ok=false; }
-    }
     return !!ok;
   }catch(e){
     return false;
   }finally{
-    setTimeout(()=>{ _speaking = false; }, 220);
+    setTimeout(()=>{ _speaking = false; }, 200);
   }
 }
 
-/* NativeTTS 就绪回调 (安卓 onInit 成功后注入) */
-window.__ttsReady = function(ok){
-  AUD.ttsNative = !!ok;
-  if(ok) toast('系统TTS引擎就绪','🔊');
-};
+/* __ttsReady 回调保留空实现(兼容旧安卓端, 不再依赖) */
+window.__ttsReady = function(){};
+/* 确保首次交互时 ME WebAudio 解锁 (安卓WebView首次必须用户手势才能播) */
+document.addEventListener('click', ()=>{ try{ ME.ensure(); }catch(_){} }, {once:true, capture:true});
+document.addEventListener('touchstart', ()=>{ try{ ME.ensure(); }catch(_){} }, {once:true, capture:true});
 
-/* 主动轮询一次 NativeTTS.isAvailable (因为 onInit 回调有时 evaluateJavascript 执行时机偏晚) */
-setTimeout(()=>{
-  try{
-    if(window.NativeTTS && typeof window.NativeTTS.isAvailable === 'function'){
-      const s = window.NativeTTS.isAvailable();
-      if(typeof s === 'string' && s.indexOf('"ok":true') >= 0){
-        AUD.ttsNative = true;
-      }
-    }
-  }catch(e){}
-}, 800);
-
-/* 网络状态监听 (自动切换在线/离线) */
+/* 网络状态监听 (保留作UI提示, 不影响TTS) */
 try{
-  window.addEventListener('online',  ()=>{ AUD.netMode = true;  toast('已联网 · CDN音质可用','🌐'); }, {passive:true});
-  window.addEventListener('offline', ()=>{ AUD.netMode = false; toast('离线模式 · 使用系统发音/缓存','📴'); }, {passive:true});
+  window.addEventListener('online',  ()=>{ AUD.netMode = true;  }, {passive:true});
+  window.addEventListener('offline', ()=>{ AUD.netMode = false; }, {passive:true});
   AUD.netMode = navigator.onLine !== false;
 }catch(e){ AUD.netMode = true; }
 
-/* voice 预加载 (部分浏览器需手动触发) */
-try{
-  if('speechSynthesis' in window){
-    speechSynthesis.getVoices();
-    speechSynthesis.onvoiceschanged = ()=>{ try{ speechSynthesis.getVoices(); }catch(_){} };
-  }
-}catch(e){}
 try{ AUD.openDB().catch(()=>{}); }catch(e){}
 
 /* ---------- 导航 ---------- */

@@ -16,7 +16,7 @@ $BT/aapt2 link -o build/base.apk \
   --manifest AndroidManifest.xml \
   -I "$PLATFORM" \
   --min-sdk-version 24 --target-sdk-version 34 \
-  --version-code 3 --version-name 3.0 \
+  --version-code 5 --version-name 4.0.0 \
   -A assets \
   build/res.zip
 
@@ -41,6 +41,6 @@ echo "[6/6] apksigner 签名..."
 cd ..
 $BT/apksigner sign --ks yujie.keystore \
   --ks-pass pass:yujie2026 --key-pass pass:yujie2026 \
-  --out 语界-LinguaVerse-v3.0.apk build/aligned.apk
-$BT/apksigner verify 语界-LinguaVerse-v3.0.apk && echo "OK"
-ls -lh 语界-LinguaVerse-v3.0.apk
+  --out LinguaVerse-v4.0.0.apk build/aligned.apk
+$BT/apksigner verify LinguaVerse-v4.0.0.apk && echo "OK"
+ls -lh LinguaVerse-v4.0.0.apk

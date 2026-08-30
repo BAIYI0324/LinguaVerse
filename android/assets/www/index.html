@@ -3,19 +3,24 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no">
-<meta name="theme-color" content="#F4F5F7">
+<meta name="theme-color" content="#2E6BFF">
 <meta name="mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="default">
-<title>语界 · 不背单词</title>
+<title>语界 · 四六级日韩多语种学习</title>
 <link rel="manifest" href="manifest.json">
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/styles.css">
 </head>
 <body>
-<!-- 应用外壳 / 状态栏 / Tab / Player / Toasts 均由 app.js 在 DOMContentLoaded 时创建 -->
+<!-- 纯内置离线运行: 不依赖外部TTS服务/系统已安装TTS软件, TTS引擎在 js/vendor/mespeak/ -->
+<script src="js/vendor/mespeak/mespeak_config.js"></script>
+<script src="js/vendor/mespeak/mespeak.js"></script>
+<script src="js/vendor/mespeak/voice-en-us.js"></script>
+<script src="js/vendor/mespeak/voice-zh.js"></script>
 <script src="js/data.js"></script>
+<script src="js/data_words_patch.js"></script>
 <script src="js/app.js"></script>
 </body>
 </html>

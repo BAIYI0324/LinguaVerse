@@ -1,7 +1,9 @@
-/* ============ 语界 LinguaVerse · 课程数据 v2 ============ */
+/* ============ 语界 LinguaVerse · 课程数据 v4.0 (纯内置离线TTS + 扩充四六级词库 4500+/2000+ 架构) ============ */
 /* 单词条目格式:
    英语(富格式): [词, 音标, 释义, 词根助记, [[例句,译文,标签],...]]  标签: 真题/影视/日常
-   日韩(兼容格式): [词, 读音, 释义, 例句, 例句译文]                 运行时归一化 */
+   日韩(兼容格式): [词, 读音, 释义, 例句, 例句译文]                 运行时归一化
+   扩充词库: CET4_WORDS/CET6_WORDS 由独立文件 data_words_patch.js 提供,
+            CET4_LESSONS_RANGE/CET6_LESSONS_RANGE 提供每课切片范围。 */
 
 const LANGUAGES = {
   en: { id:'en', name:'英语', native:'English', flag:'🇬🇧', ttsLang:'en-US', levels:[
@@ -29,42 +31,87 @@ const SKILL_NAME = {vocab:'词汇', grammar:'语法', listening:'听力', speaki
 const COURSES = {
   en: {
     cet4: [
-      { id:'en-c4-u1', title:'高频核心动词', desc:'四六级阅读的同义词替换主力',
+      { id:'en-c4-u1', title:'高频核心动词(上)', desc:'四六级阅读的同义词替换主力',
         lessons:[
-          {id:'en-c4-u1-v', type:'vocab', title:'高频动词精选', xp:40},
-          {id:'en-c4-u1-g', type:'grammar', title:'虚拟语气', xp:30},
-          {id:'en-c4-u1-l', type:'listening', title:'校园场景听力', xp:30},
-          {id:'en-c4-u1-s', type:'speaking', title:'学业话题表达', xp:30},
+          {id:'en-c4-u1-v',   type:'vocab', title:'高频动词精选 · 157词', xp:50},
+          {id:'en-c4-u1-v-2', type:'vocab', title:'高频动词拓展 · 157词', xp:50},
+          {id:'en-c4-u1-g',   type:'grammar', title:'虚拟语气', xp:30},
+          {id:'en-c4-u1-l',   type:'listening', title:'校园场景听力', xp:30},
+          {id:'en-c4-u1-s',   type:'speaking', title:'学业话题表达', xp:30},
         ]},
-      { id:'en-c4-u2', title:'校园与学术', desc:'听说读写全场景覆盖',
+      { id:'en-c4-u2', title:'校园与学术(上)', desc:'听说读写全场景覆盖',
         lessons:[
-          {id:'en-c4-u2-v', type:'vocab', title:'校园学术词汇', xp:40},
-          {id:'en-c4-u2-g', type:'grammar', title:'定语从句', xp:30},
-          {id:'en-c4-u2-l', type:'listening', title:'通知与安排', xp:30},
-          {id:'en-c4-u2-s', type:'speaking', title:'校园日常会话', xp:30},
+          {id:'en-c4-u2-v',   type:'vocab', title:'校园学术词汇 · 157词', xp:50},
+          {id:'en-c4-u2-v-2', type:'vocab', title:'校园学术拓展 · 157词', xp:50},
+          {id:'en-c4-u2-g',   type:'grammar', title:'定语从句', xp:30},
+          {id:'en-c4-u2-l',   type:'listening', title:'通知与安排', xp:30},
+          {id:'en-c4-u2-s',   type:'speaking', title:'校园日常会话', xp:30},
         ]},
-      { id:'en-c4-u3', title:'情感与态度', desc:'完形填空的高频考点',
+      { id:'en-c4-u3', title:'情感与态度(上)', desc:'完形填空的高频考点',
         lessons:[
-          {id:'en-c4-u3-v', type:'vocab', title:'情感态度词汇', xp:40},
-          {id:'en-c4-u3-g', type:'grammar', title:'非谓语动词', xp:30},
-          {id:'en-c4-u3-l', type:'listening', title:'生活场景听力', xp:30},
-          {id:'en-c4-u3-s', type:'speaking', title:'情绪与表达', xp:30},
+          {id:'en-c4-u3-v',   type:'vocab', title:'情感态度词汇 · 157词', xp:50},
+          {id:'en-c4-u3-v-2', type:'vocab', title:'情感态度拓展 · 157词', xp:50},
+          {id:'en-c4-u3-g',   type:'grammar', title:'非谓语动词', xp:30},
+          {id:'en-c4-u3-l',   type:'listening', title:'生活场景听力', xp:30},
+          {id:'en-c4-u3-s',   type:'speaking', title:'情绪与表达', xp:30},
+        ]},
+      { id:'en-c4-u4', title:'社会与科技(下)', desc:'阅读长文主题词汇',
+        lessons:[
+          {id:'en-c4-u4-v',   type:'vocab', title:'社会科技词汇 · 158词', xp:55},
+          {id:'en-c4-u4-v-2', type:'vocab', title:'社会科技拓展 · 157词', xp:55},
+          {id:'en-c4-u4-g',   type:'grammar', title:'名词性从句', xp:30},
+          {id:'en-c4-u4-l',   type:'listening', title:'新闻报道听力', xp:30},
+          {id:'en-c4-u4-s',   type:'speaking', title:'社会话题讨论', xp:30},
+        ]},
+      { id:'en-c4-u5', title:'经济与生活(下)', desc:'听力长对话、翻译高频',
+        lessons:[
+          {id:'en-c4-u5-v',   type:'vocab', title:'经济生活词汇 · 157词', xp:55},
+          {id:'en-c4-u5-v-2', type:'vocab', title:'经济生活拓展 · 157词', xp:55},
+          {id:'en-c4-u5-g',   type:'grammar', title:'状语从句', xp:30},
+          {id:'en-c4-u5-l',   type:'listening', title:'消费场景听力', xp:30},
+          {id:'en-c4-u5-s',   type:'speaking', title:'生活消费表达', xp:30},
+        ]},
+      { id:'en-c4-u6', title:'人与自然(下)', desc:'翻译与写作的主题词库',
+        lessons:[
+          {id:'en-c4-u6-v',   type:'vocab', title:'人与自然词汇 · 157词', xp:55},
+          {id:'en-c4-u6-v-2', type:'vocab', title:'综合冲刺 · 157词', xp:55},
+          {id:'en-c4-u6-g',   type:'grammar', title:'主谓一致&强调句', xp:30},
+          {id:'en-c4-u6-l',   type:'listening', title:'环境主题听力', xp:30},
+          {id:'en-c4-u6-s',   type:'speaking', title:'环保观点表达', xp:30},
         ]},
     ],
     cet6: [
-      { id:'en-c6-u1', title:'六级高频核心', desc:'阅读正确选项的同义替换库',
+      { id:'en-c6-u1', title:'六级高频核心(上)', desc:'阅读正确选项的同义替换库',
         lessons:[
-          {id:'en-c6-u1-v', type:'vocab', title:'六级核心词汇', xp:50},
-          {id:'en-c6-u1-g', type:'grammar', title:'倒装结构', xp:35},
-          {id:'en-c6-u1-l', type:'listening', title:'讲座与报告', xp:35},
-          {id:'en-c6-u1-s', type:'speaking', title:'观点陈述', xp:35},
+          {id:'en-c6-u1-v',   type:'vocab', title:'六级核心词汇 · 113词', xp:55},
+          {id:'en-c6-u1-v-2', type:'vocab', title:'六级核心拓展 · 113词', xp:55},
+          {id:'en-c6-u1-g',   type:'grammar', title:'倒装结构', xp:35},
+          {id:'en-c6-u1-l',   type:'listening', title:'讲座与报告', xp:35},
+          {id:'en-c6-u1-s',   type:'speaking', title:'观点陈述', xp:35},
         ]},
-      { id:'en-c6-u2', title:'职场与社会', desc:'六级听力讲座高频话题',
+      { id:'en-c6-u2', title:'职场与社会(上)', desc:'六级听力讲座高频话题',
         lessons:[
-          {id:'en-c6-u2-v', type:'vocab', title:'职场社会词汇', xp:50},
-          {id:'en-c6-u2-g', type:'grammar', title:'独立主格结构', xp:35},
-          {id:'en-c6-u2-l', type:'listening', title:'社会话题听力', xp:35},
-          {id:'en-c6-u2-s', type:'speaking', title:'职场沟通', xp:35},
+          {id:'en-c6-u2-v',   type:'vocab', title:'职场社会词汇 · 113词', xp:55},
+          {id:'en-c6-u2-v-2', type:'vocab', title:'职场社会拓展 · 113词', xp:55},
+          {id:'en-c6-u2-g',   type:'grammar', title:'独立主格结构', xp:35},
+          {id:'en-c6-u2-l',   type:'listening', title:'社会话题听力', xp:35},
+          {id:'en-c6-u2-s',   type:'speaking', title:'职场沟通', xp:35},
+        ]},
+      { id:'en-c6-u3', title:'学术与研究(下)', desc:'六级阅读长难句高频词',
+        lessons:[
+          {id:'en-c6-u3-v',   type:'vocab', title:'学术研究词汇 · 113词', xp:60},
+          {id:'en-c6-u3-v-2', type:'vocab', title:'学术研究拓展 · 113词', xp:60},
+          {id:'en-c6-u3-g',   type:'grammar', title:'省略与替代', xp:35},
+          {id:'en-c6-u3-l',   type:'listening', title:'学术讲座听力', xp:35},
+          {id:'en-c6-u3-s',   type:'speaking', title:'学术观点交流', xp:35},
+        ]},
+      { id:'en-c6-u4', title:'人文与思辨(下)', desc:'翻译/写作/深度阅读冲刺',
+        lessons:[
+          {id:'en-c6-u4-v',   type:'vocab', title:'人文思辨词汇 · 113词', xp:60},
+          {id:'en-c6-u4-v-2', type:'vocab', title:'综合冲刺 · 109词', xp:60},
+          {id:'en-c6-u4-g',   type:'grammar', title:'as 的多重用法', xp:35},
+          {id:'en-c6-u4-l',   type:'listening', title:'人文主题听力', xp:35},
+          {id:'en-c6-u4-s',   type:'speaking', title:'思辨话题演讲', xp:35},
         ]},
     ],
   },
@@ -447,6 +494,111 @@ const CONTENT = {
     {t:'Could we discuss the details of the contract?', r:'/kʊd wi dɪˈskʌs ðə ˈdiːteɪlz əv ðə ˈkɑːntrækt/', m:'我们能讨论一下合同细节吗?'},
     {t:'Our team is making steady progress on the project.', r:'/ˈaʊər tiːm ɪz ˈmeɪkɪŋ ˈstedi ˈprɑːɡres ɑːn ðə ˈprɑːdʒekt/', m:'我们团队在项目上稳步推进。'},
     {t:'Thank you for your time and consideration.', r:'/θæŋk juː fɔːr jɔːr taɪm ænd kənˌsɪdəˈreɪʃn/', m:'感谢您的时间与考虑。'},
+  ]},
+
+  /* ---------- CET-4 U4 社会与科技 ---------- */
+  'en-c4-u4-g': {items:[
+    {q:'___ he said at the meeting surprised everyone.', opts:['That','What','Which','Why'], a:1, explain:'What 引导主语从句,在从句中充当 said 的宾语。'},
+    {q:'The question is ___ we can finish the work on time.', opts:['that','whether','what','which'], a:1, explain:'whether 引导表语从句,表示"是否"。'},
+    {q:'I have no idea ___ he has gone.', opts:['where','which','that','what'], a:0, explain:'同位语从句用 where 说明 idea 的内容。'},
+    {q:'It is a fact ___ English is widely used in business.', opts:['what','which','that','whether'], a:2, explain:'It is a fact that… 中 that 引导主语从句(后置),无词义不做成分。'},
+    {q:'The news ___ our team won the game cheered us up.', opts:['which','that','what','whether'], a:1, explain:'news 后面跟同位语从句 that…,无词义不做成分。'},
+  ]},
+  'en-c4-u4-l': {items:[
+    {t:'The new AI system can process thousands of documents in seconds.', m:'新的人工智能系统可以在几秒钟内处理数千份文档。'},
+    {t:'Social media has changed the way people communicate with each other.', m:'社交媒体改变了人们彼此交流的方式。'},
+    {t:'The government is investing heavily in renewable energy projects.', m:'政府正大力投资可再生能源项目。'},
+    {t:'Online shopping has become part of young people\'s daily life.', m:'网上购物已成为年轻人日常生活的一部分。'},
+  ]},
+  'en-c4-u4-s': {items:[
+    {t:'From my point of view, technology makes our life more convenient.', r:'/frʌm maɪ pɔɪnt əv vjuː tekˈnɑːlədʒi meɪks ˈaʊər laɪf mɔːr kənˈviːniənt/', m:'在我看来,科技让我们的生活更便捷。'},
+    {t:'We should use social media in a more responsible way.', r:'/wiː ʃʊd juːz ˈsoʊʃl ˈmiːdiə ɪn ə mɔːr rɪˈspɑːnsəbl weɪ/', m:'我们应以更负责任的方式使用社交媒体。'},
+    {t:'What do you think of the future of artificial intelligence?', r:'/wʌt duː juː θɪŋk əv ðə ˈfjuːtʃər əv ˌɑːrtɪˈfɪʃl ɪnˈtelɪdʒəns/', m:'你如何看待人工智能的未来?'},
+    {t:'Let\'s talk about the advantages and disadvantages of online learning.', r:'/lets tɔːk əˈbaʊt ði ədˈvæntɪdʒɪz ænd ˌdɪsədˈvæntɪdʒɪz əv ˌɑːnˈlaɪn ˈlɜːrnɪŋ/', m:'我们来讨论在线学习的利与弊。'},
+  ]},
+
+  /* ---------- CET-4 U5 经济与生活 ---------- */
+  'en-c4-u5-g': {items:[
+    {q:'I will wait for you ___ you come back.', opts:['however','whatever','until','though'], a:2, explain:'until 引导时间状语从句:"直到…为止"。'},
+    {q:'___ he is very old, he still works eight hours a day.', opts:['Because','Although','Since','Unless'], a:1, explain:'Although 引导让步状语从句。'},
+    {q:'You will miss the train ___ you hurry up.', opts:['if','unless','when','because'], a:1, explain:'unless = if not "除非,否则"。'},
+    {q:'He speaks English as if he ___ a native speaker.', opts:['is','was','were','be'], a:2, explain:'as if 后用虚拟语气,be 动词统一 were。'},
+    {q:'___ the work is done, we can go out to play.', opts:['Although','Since','Before','Unless'], a:1, explain:'since 引导原因状语从句,"既然"。'},
+  ]},
+  'en-c4-u5-l': {items:[
+    {t:'The price of vegetables has risen by 15% this month.', m:'本月蔬菜价格上涨了15%。'},
+    {t:'I want to open a savings account at the bank.', m:'我想在银行开一个储蓄账户。'},
+    {t:'Many young people prefer to pay by mobile phone.', m:'很多年轻人更喜欢用手机支付。'},
+    {t:'Tourism is a major source of income for this city.', m:'旅游业是这座城市的主要收入来源。'},
+  ]},
+  'en-c4-u5-s': {items:[
+    {t:'Excuse me, how much is this T-shirt?', r:'/ɪkˈskjuːz miː haʊ mʌtʃ ɪz ðɪs ˈtiː ʃɜːrt/', m:'请问,这件T恤多少钱?'},
+    {t:'I would like to try on this pair of shoes, size 42.', r:'/aɪ wʊd laɪk tə traɪ ɑːn ðɪs per əv ʃuːz saɪz fɔːˈtuː/', m:'我想试试这双42码的鞋。'},
+    {t:'Do you accept credit cards or only cash?', r:'/duː juː əkˈsept ˈkredɪt kɑːrdz ɔːr ˈoʊnli kæʃ/', m:'你们接受信用卡还是只收现金?'},
+    {t:'Let\'s split the bill this time.', r:'/lets splɪt ðə bɪl ðɪs taɪm/', m:'这次我们AA吧。'},
+  ]},
+
+  /* ---------- CET-4 U6 人与自然 ---------- */
+  'en-c4-u6-g': {items:[
+    {q:'Neither he nor I ___ interested in this movie.', opts:['is','am','are','be'], a:1, explain:'neither…nor… 就近原则,靠近 I 用 am。'},
+    {q:'The teacher, along with his students, ___ going to visit the museum.', opts:['are','is','were','be'], a:1, explain:'along with 不影响主语,the teacher 是单数用 is。'},
+    {q:'It was yesterday ___ I met him in the library.', opts:['when','which','that','who'], a:2, explain:'强调句 It is/was…that… 对时间状语强调用 that。'},
+    {q:'What he needs ___ more time and patience.', opts:['are','is','were','have'], a:1, explain:'从句作主语视为单数,用 is。'},
+    {q:'The number of cars in the city ___ increasing.', opts:['keep','keeps','are kept','keeping'], a:1, explain:'the number of …的数量,中心词 number 是单数用 keeps。'},
+  ]},
+  'en-c4-u6-l': {items:[
+    {t:'The air quality in big cities has improved a lot in recent years.', m:'近年来大城市的空气质量大幅改善。'},
+    {t:'More and more wild animals are returning to the protected forests.', m:'越来越多的野生动物正回到受保护的森林中。'},
+    {t:'The government plans to build 100 new parks by 2030.', m:'政府计划到2030年新建100座公园。'},
+    {t:'Everyone should do their part to protect the environment.', m:'每个人都应该为保护环境尽自己的一份力。'},
+  ]},
+  'en-c4-u6-s': {items:[
+    {t:'Protecting the environment is everyone\'s responsibility.', r:'/prəˈtektɪŋ ði ɪnˈvaɪrənmənt ɪz ˈevriwʌnz rɪˌspɑːnsəˈbɪləti/', m:'保护环境是每个人的责任。'},
+    {t:'I usually take public transport instead of driving to work.', r:'/aɪ ˈjuːʒuəli teɪk ˈpʌblɪk ˈtrænspɔːrt ɪnˈsted əv ˈdraɪvɪŋ tə wɜːrk/', m:'我通常坐公交上班,不开车。'},
+    {t:'We should reduce the use of single-use plastic bags.', r:'/wiː ʃʊd rɪˈduːs ðə juːs əv ˈsɪŋɡl juːs ˈplæstɪk bæɡz/', m:'我们应减少一次性塑料袋的使用。'},
+    {t:'Saving water and electricity starts from small things.', r:'/ˈseɪvɪŋ ˈwɔːtər ænd ɪˌlekˈtrɪsəti stɑːrts frʌm smɔːl θɪŋz/', m:'节约水电从点滴小事做起。'},
+  ]},
+
+  /* ---------- CET-6 U3 学术与研究 ---------- */
+  'en-c6-u3-g': {items:[
+    {q:'If ___ carefully, the experiment will be successful.', opts:['doing','done','to do','be done'], a:1, explain:'状语从句省略:experiment 与 do 是被动关系,用过去分词 done。'},
+    {q:'She is taller than ___ in her class.', opts:['any student','any other student','any students','other student'], a:1, explain:'同一范围内比较用 any other + 单数名词。'},
+    {q:'He is a man of few words, but ___ he says is always to the point.', opts:['what','that','which','why'], a:0, explain:'what 引导主语从句,并在从句中作 says 的宾语。'},
+    {q:'—Will you go to the party? —I believe ___, if time permits.', opts:['go','to','so','it'], a:1, explain:'动词替代:to 后省略重复的不定式动词原形 go。'},
+    {q:'The climate here is as mild as ___ in Kunming.', opts:['one','it','that','those'], a:2, explain:'替代不可数名词 climate 用 that。'},
+  ]},
+  'en-c6-u3-l': {items:[
+    {t:'The research team published their findings in a top scientific journal.', m:'研究团队在顶级科学期刊上发表了他们的发现。'},
+    {t:'The professor emphasized the importance of empirical evidence.', m:'教授强调了经验证据的重要性。'},
+    {t:'Students were asked to critically evaluate the paper\'s methodology.', m:'学生被要求批判性地评估论文的研究方法。'},
+    {t:'The conference attracted over 500 scholars from around the world.', m:'会议吸引了来自世界各地的500多位学者。'},
+  ]},
+  'en-c6-u3-s': {items:[
+    {t:'The purpose of this study is to investigate the relationship between the two variables.', r:'/ðə ˈpɜːrpəs əv ðɪs ˈstʌdi ɪz tuː ɪnˈvestɪɡeɪt ðə rɪˈleɪʃnʃɪp bɪˈtwiːn ðə tuː ˈveriəblz/', m:'本研究旨在考察两个变量之间的关系。'},
+    {t:'Our results are consistent with those of previous studies.', r:'/ˈaʊər rɪˈzʌlts ɑːr kənˈsɪstənt wɪð ðoʊz əv ˈpriːviəs ˈstʌdiz/', m:'我们的结果与以往研究的结果一致。'},
+    {t:'Could you explain the research methodology in more detail?', r:'/kʊd juː ɪkˈspleɪn ðə ˈriːsɜːrtʃ ˌmeθəˈdɑːlədʒi ɪn mɔːr dɪˈteɪl/', m:'您能更详细地解释一下研究方法吗?'},
+    {t:'These findings suggest several directions for future research.', r:'/ðiːz ˈfaɪndɪŋz səˈdʒest ˈsevrəl dəˈrekʃnz fɔːr ˈfjuːtʃər ˈriːsɜːrtʃ/', m:'这些发现为未来的研究指明了若干方向。'},
+  ]},
+
+  /* ---------- CET-6 U4 人文与思辨 ---------- */
+  'en-c6-u4-g': {items:[
+    {q:'___ is known to all, China has made remarkable progress in space exploration.', opts:['It','As','Which','That'], a:1, explain:'As 引导非限制性定语从句置于句首,指代整个主句。'},
+    {q:'He doesn\'t speak English ___ his sister.', opts:['as good as','as well as','better as','as better as'], a:1, explain:'as…as 原级比较,speak 用副词 well。'},
+    {q:'The old temple, ___ roof was damaged in the storm, is being repaired.', opts:['whose','which','that','its'], a:0, explain:'非限制性定语从句中,先行词 temple 与 roof 是所属关系,用 whose。'},
+    {q:'___ is reported in the newspaper, the two countries have signed a trade agreement.', opts:['It','That','As','What'], a:2, explain:'As is reported… 为固定结构,"正如…所报道"。'},
+    {q:'She is a teacher, ___ is clear from her manner.', opts:['that','who','as','which'], a:2, explain:'as 或 which 均可指代主句内容,但 as 有"正如"语义更自然,前有逗号也可用 which,推荐 as。'},
+  ]},
+  'en-c6-u4-l': {items:[
+    {t:'Literature reflects the values and beliefs of a particular era.', m:'文学反映着某个特定时代的价值观和信仰。'},
+    {t:'The exhibition showcases works by contemporary Chinese artists.', m:'展览展示了当代中国艺术家的作品。'},
+    {t:'Many traditional customs are being revived in rural communities.', m:'许多传统习俗正在乡村社区中复苏。'},
+    {t:'Philosophy teaches us to think critically rather than accept things blindly.', m:'哲学教会我们批判性地思考,而不是盲目接受事物。'},
+  ]},
+  'en-c6-u4-s': {items:[
+    {t:'In my opinion, cultural diversity should be preserved and celebrated.', r:'/ɪn maɪ əˈpɪnjən ˈkʌltʃərəl daɪˈvɜːrsəti ʃʊd biː prɪˈzɜːrvd ænd ˈseləbreɪtɪd/', m:'在我看来,文化多样性应当被保护并被珍视。'},
+    {t:'History teaches us lessons that we should never forget.', r:'/ˈhɪstri ˈtiːtʃɪz ʌs ˈlesnz ðæt wiː ʃʊd ˈnevər fərˈɡet/', m:'历史给我们以应永志不忘的教训。'},
+    {t:'What is your view on the role of art in modern society?', r:'/wʌt ɪz jɔːr vjuː ɑːn ðə roʊl əv ɑːrt ɪn ˈmɑːdərn səˈsaɪəti/', m:'你如何看待艺术在现代社会中的作用?'},
+    {t:'Only through dialogue and mutual respect can we build a better world.', r:'/ˈoʊnli θruː ˈdaɪəlɔːɡ ænd ˈmjuːtʃuəl rɪˈspekt kæn wiː bɪld ə ˈbetər wɜːrld/', m:'唯有通过对话与相互尊重,我们才能构建更美好的世界。'},
   ]},
 
   /* ---------- 日语(保留原有内容) ---------- */
