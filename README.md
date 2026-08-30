@@ -4,7 +4,7 @@
 > 一款不背单词风格的多语种学习 App,支持英语四六级 / 日语 N5~N3 / 韩语 TOPIK I~III,
 > 内置 SRS 间隔重复复习算法、MIUIX 风格 UI、PWA 离线, 以及 Android 原生 APK 双端发布。
 >
-> ⚠️ **当前主版本: v2.0** (推荐)  ·  v1.0 历史快照在 `v1/` 目录
+> ⚠️ **当前主版本: v2.0.1** (推荐)  ·  v1.0 历史快照在 `v1/` 目录
 >
 > [GitHub 仓库](https://github.com/BAIYI0324/LinguaVerse) ·
 > [Release v1.0](https://github.com/BAIYI0324/LinguaVerse/releases/tag/v1.0.0) ·
@@ -12,14 +12,39 @@
 
 ---
 
+
+## 📋 目录
+
+- [版本一览](#-版本一览)
+- [快速开始](#-快速开始-v20)
+  - [🤖 安卓直接安装 APK](#-安卓直接安装-apk)
+  - [⌨️ 开发者命令](#️-开发者命令)
+- [产品亮点](#-v20-产品亮点)
+  - [🎨 MIUIX / HyperOS 设计系统](#-miuix--hyperos-设计系统)
+  - [🧠 SRS 间隔重复记忆](#-srs-间隔重复记忆-leitner-box-system)
+  - [🃏 不背单词式词卡](#-不背单词式词卡)
+  - [📚 完整词书](#-完整词书)
+  - [👤 本地多账号体系](#-本地多账号体系--数据导入导出)
+  - [📱 PWA + Service Worker 离线](#-pwa--service-worker-离线)
+  - [🤖 Android APK](#-android-apk)
+- [仓库结构](#-仓库结构)
+- [开发流程](#-开发流程-commits-历史追溯)
+- [🛠️ 构建/开发依赖](#️-构建开发依赖)
+- [🤝 参与贡献](#-参与贡献)
+- [❓ FAQ](#-faq)
+- [🗺️ 路线图](#️-路线图)
+- [🔐 安全与隐私](#-安全与隐私)
+- [🚀 发布历史](#-发布历史)
+- [License](#-license)
+
 ## 📦 版本一览
 
 | 版本 | 状态 | 代码路径 | 标签 | 核心特性 |
 |---|---|---|---|---|
-| **v2.0 (Current)** | ✅ 推荐 | [`v2/`](./v2/README.md) | `v2.0.0` | 四六级 / SRS / MIUIX / PWA / APK |
+| **v2.0.1 (Current)** | ✅ 推荐 | [`v2/`](./v2/README.md) | `v2.0.1` | 四六级 / SRS / MIUIX / PWA / APK |
 | v1.0 (Historical) | 🧳 历史归档 | [`v1/`](./v1/README.md) | `v1.0.0` | 顶部导航 + A1-B2 + 社区 |
 
-## ✨ 快速开始 (v2.0)
+## ✨ 快速开始 (v2.0.1)
 
 ```bash
 # 1. 克隆仓库
@@ -40,6 +65,21 @@ cd v2 && python3 -m http.server 8000
 adb install android/语界-LinguaVerse-v3.0.apk
 ```
 包体约 474 KB,最低 Android 8.0 (API 26)。
+
+### ⌨️ 开发者命令
+
+仓库自带 `Makefile` / `package.json` / `scripts/` 三套快捷命令,任选其一:
+
+| 动作 | `make` | `npm run` | `bash scripts/` |
+|---|---|---|---|
+| 启动 v2 开发服务器(端口 8080) | `make dev` | `npm run dev` | `scripts/dev-server.sh v2 8080` |
+| 启动 v1 历史服务器(端口 8081) | `make dev-v1` | `npm run dev:v1` | `scripts/dev-server.sh v1 8081` |
+| 所有 JS 语法检查 | `make lint` | `npm run lint:js` | 自动由 CI 执行 |
+| 发布前全量校验 | `make verify` | `npm run verify` | `scripts/verify-structure.sh` |
+| 重新打包 APK | `make apk` | `npm run build:apk` | `bash android/build.sh` |
+| 生成示例用户数据 JSON | - | - | `node scripts/export-sample-data.js` |
+
+CI(推送/PR 自动跑)位于 [`.github/workflows/ci.yml`](./.github/workflows/ci.yml),检查 JS 语法 + 产物完整性。
 
 ---
 
@@ -220,10 +260,50 @@ v2 纯 H5 部分**零外部依赖** (无 npm / webpack / react)。
 
 ## 🚀 发布历史
 
-- **v1.0.0** · 2025-08-28: 首次多语种在线教育平台发布(英语 A1-B2 + 日 + 韩)
-- **v2.0.0** · 2025-08-30: 四六级 / SRS / MIUIX / 不背单词词卡 / 本地多账号 / PWA / APK 双端
+- **v1.0.0** · 2026-08-28: 首次多语种在线教育平台发布(英语 A1-B2 + 日 + 韩)
+- **v2.0.0** · 2026-08-30: 四六级 / SRS / MIUIX / 不背单词词卡 / 本地多账号 / PWA / APK 双端
+- **v2.0.1** · 2026-08-30: 开源仓库补全(.github/.gitignore/scripts/examples/6 份新 docs)
 
 完整变更请看 [CHANGELOG](./CHANGELOG.md)。
+
+## 🤝 参与贡献
+
+每一份贡献都有价值!补一个单词的音标、修一个 CSS 错位、或写一章新的语法课,都欢迎。
+
+- **快速上手**: [docs/CONTRIBUTING.md](./docs/CONTRIBUTING.md) — 包含 Fork → Clone → 提 PR 的完整步骤
+- **好入手任务**: [![good-first-issue](https://img.shields.io/github/issues/BAIYI0324/LinguaVerse/good%20first%20issue?color=green)](https://github.com/BAIYI0324/LinguaVerse/labels/good%20first%20issue)
+- **词汇纠错**: 直接开「📚 词汇/内容纠错」模板 Issue,3 个字段填完就行
+- **讨论 / 头脑风暴**: [Discussions](https://github.com/BAIYI0324/LinguaVerse/discussions)
+
+贡献者协议:本仓库遵循 [Contributor Covenant v2.1](https://www.contributor-covenant.org/zh-cn/version/2/1/code_of_conduct.html)。
+
+
+## ❓ FAQ
+
+安装失败、APK 提示"未知来源"、为啥不做后端、SRS 间隔参数、重新打包流程…… —— 全部问题集中在:
+
+👉 **[docs/FAQ.md](./docs/FAQ.md)** (包含 15+ 条常见问题解答)
+
+
+## 🗺️ 路线图
+
+- **v2.0.x** — 开源仓库补全(当前进行中)
+- **v2.1.x** — 更多词库(考研/雅思/托福)+ 听写模式 + 成就动画(约 2026 Q4)
+- **v2.2.x** — WebDAV 自动备份 / 零知识云同步 / iOS / 桌面壳
+- **v3.0**    — AI 口语批改 / 长文生词生成器 / 多人打卡小组 / 无障碍增强
+
+完整版本 + 投票方式见 **[docs/ROADMAP.md](./docs/ROADMAP.md)**。
+
+
+## 🔐 安全与隐私
+
+- 运行时 **0 外部依赖 + 0 网络请求**,不调用任何第三方 SDK / 埋点 / 云 API
+- APK 使用 v2 签名方案,篡改后无法安装
+- WebView 仅拦截 `https://localhost/*` 到本地 assets,其余 URL 交给系统浏览器
+- 敏感安全漏洞请**私密上报**:仓库 `Security` 选项卡 → New Draft Security Advisory(草稿只有你和维护者可见)
+
+完整安全政策与上报方式见 **[docs/SECURITY.md](./docs/SECURITY.md)**。
+
 
 ## 📝 License
 

@@ -5,6 +5,65 @@
 
 ---
 
+## [v2.0.1] - 2026-08-30
+
+> 开源仓库补全 Patch Release — 顶层工程规范 / .github 协作模板 / 开发脚本 / 示例素材 / 6 份新文档。
+> 版本代码无功能性变更,v2.0.0 APK 与学习逻辑保持稳定一致。
+
+### ✨ Added (新增)
+
+- **顶层工程文件组** (完整项目工程化):
+  - `.gitignore` — OS/IDE/node_modules/android build/学习备份 JSON 精准忽略(不误排除项目图标/素材)
+  - `.editorconfig` — 统一 UTF-8 / LF / 2-space indent / Java 4-space / md 保留行尾空格
+  - `.gitattributes` — `* text=auto eol=lf` + PNG/JPG/APK/keystore 二进制标记 + Shell 强制 LF
+  - `package.json` — 元数据 + `dev / dev:v1 / lint:js / verify / build:apk` 五个 npm scripts
+  - `Makefile` — `help / dev / dev-v1 / lint / verify / apk / clean` 七个目标,自带注释
+  - `CITATION.cff` — 学术引用 YAML,Zenodo/Zotero 可识别
+
+- **.github 协作规范模板**:
+  - `ISSUE_TEMPLATE/1-bug-report.yml` — 环境 6 选 1 / 严重程度 4 级的结构化 Bug 单
+  - `ISSUE_TEMPLATE/2-feature-request.yml` — 词库/功能/UI/平台/无障碍 分类建议
+  - `ISSUE_TEMPLATE/3-data-correction.yml` — 音标释义例句纠错专用表单
+  - `ISSUE_TEMPLATE/config.yml` — 关闭空白 Issue,引导到 Discussion/文档
+  - `PULL_REQUEST_TEMPLATE.md` — 自检 7 项清单 (lint/verify/手机尺寸/data.js 抽查 等)
+  - `CODEOWNERS` — 模块归属 (data/app/UI/APK/文档) 默认 @BAIYI0324
+  - `FUNDING.yml` — 赞助入口占位
+  - `workflows/ci.yml` — push/PR 自动:JS 语法 (node --check) + 产物存在 + JSON 合法
+
+- **docs/ 新文档 (5 份全新 + CHANGELOG 本次修订)**:
+  - `CONTRIBUTING.md` — Fork→Clone→本地跑→8 项自检→提交规范→贡献者致谢
+  - `FAQ.md` — 安装 / 学习方式 / SRS 参数 / UI 换肤 / 构建 / 数据 6 大类 15+ FAQ
+  - `ROADMAP.md` — v1.0 ~ v3.0 完整路线图 + 投票方式 + 贡献者直接进排期通道
+  - `ARCHITECTURE.md` — 5 层架构图 / SRS 数据流 / localStorage 契约 / APK WebView 注入策略
+  - `SECURITY.md` — 安全保障说明 + 私密漏洞上报 (GitHub Security Advisory / Proton Mail) + 风险评级矩阵
+
+- **scripts/ 开发工具 (全平台 bash + node)**:
+  - `dev-server.sh [v1|v2] [port]` — 一行启静态服务器,自动切版本/端口
+  - `verify-structure.sh` — 30 项发布前校验 (已 100% 通过):文件存在/JS语法/JSON&YAML/APK
+  - `export-sample-data.js` — 生成示例用户数据 JSON (含 56 词 + 6 枚成就 + SRS Box 记录)
+
+- **examples/ 扩展素材 (二次开发参考)**:
+  - `sample-user-export.json` — 合法的导入导出 JSON 样本,用于测「我的→导入数据」
+  - `custom-theme.css` — 深色模式主题模板 (只需覆盖 `:root` 设计 Token 即可全局换色)
+  - `additional-cet4-words.js` — 20 条 CET-4 扩展词库 (词根助记 + 真题例句),可直接拼入 data.js
+
+### 🧹 Chores (工程化)
+
+- 给 shell 脚本统一加 `#!/usr/bin/env bash` + `set -e` + `chmod +x`
+- 修正 `verify-structure.sh` 中 `CITATION.cff` 被误判 JSON 的 bug (cff 为 YAML,改用 grep 格式头检查)
+- `.gitignore` 白名单策略: 不忽略 `android/*.apk` / `v2/icons/*.png` 等必要项目资源
+- `package.json` 版本号同步升级至 `2.0.1` (与 Git tag / Release 一致)
+
+### 📝 文档更新
+
+- 顶层 `README.md` 新增 6 个章节: **📋 目录** · **⌨️ 开发者命令** · **🤝 参与贡献** · **❓ FAQ** · **🗺️ 路线图** · **🔐 安全与隐私**
+- 修正 README 发布日期 (2025 → 2026),新增 v2.0.1 Release 条目
+- `v1/README.md` / `v2/README.md` 补充对 docs 子文档的交叉引用链接
+
+---
+
+
+
 ## [v1.0.0] - 2025-08-28
 
 > 首次多语种在线教育平台发布 — v1 历史版本。
