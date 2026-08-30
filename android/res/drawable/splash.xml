@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- 语界 LinguaVerse · 启动页 Splash 背景 (HyperOS 渐变) -->
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+    <item>
+        <shape android:shape="rectangle">
+            <gradient
+                android:angle="315"
+                android:startColor="#F8F9FB"
+                android:centerColor="#EFF2F9"
+                android:endColor="#E5E9F4"
+                android:type="linear"/>
+        </shape>
+    </item>
+    <item
+        android:gravity="center"
+        android:width="120dp"
+        android:height="120dp">
+        <shape android:shape="rectangle">
+            <corners android:radius="32dp"/>
+            <gradient
+                android:angle="135"
+                android:startColor="#2E6BFF"
+                android:centerColor="#7B3BFF"
+                android:endColor="#B94DFF"
+                android:type="linear"/>
+            <padding
+                android:top="36dp"
+                android:bottom="36dp"
+                android:left="36dp"
+                android:right="36dp"/>
+        </shape>
+    </item>
+</layer-list>

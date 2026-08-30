@@ -1,0 +1,49 @@
+<?xml version="1.0" encoding="utf-8"?>
+<manifest xmlns:android="http://schemas.android.com/apk/res/android"
+    package="com.yujie.app"
+    android:versionCode="4"
+    android:versionName="2.1.0">
+
+  <!-- 基础权限 -->
+  <uses-permission android:name="android.permission.INTERNET"/>                    <!-- 在线词典音频CDN -->
+  <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>       <!-- 判在线/离线 -->
+  <uses-permission android:name="android.permission.FOREGROUND_SERVICE"/>         <!-- TTS -->
+  <uses-permission android:name="android.permission.RECORD_AUDIO"/>               <!-- 口语跟读识别 (可选) -->
+  <uses-permission android:name="android.permission.MODIFY_AUDIO_SETTINGS"/>      <!-- 调节 TTS -->
+  <uses-permission android:name="android.permission.READ_MEDIA_AUDIO"/>           <!-- T(13)+ 媒体 -->
+  <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
+
+  <queries>
+    <!-- TextToSpeech 引擎查询 (Android 11+) -->
+    <intent>
+      <action android:name="android.intent.action.TTS_SERVICE"/>
+    </intent>
+  </queries>
+
+  <application
+      android:label="语界"
+      android:icon="@mipmap/ic_launcher"
+      android:roundIcon="@mipmap/ic_launcher"
+      android:theme="@style/AppTheme"
+      android:allowBackup="true"
+      android:usesCleartextTraffic="true"
+      android:networkSecurityConfig="@xml/network_security_config"
+      android:hardwareAccelerated="true"
+      android:largeHeap="true"
+      android:dataExtractionRules="@xml/data_extraction_rules"
+      android:fullBackupContent="@xml/backup_rules">
+    <activity
+        android:name=".MainActivity"
+        android:exported="true"
+        android:launchMode="singleTask"
+        android:screenOrientation="portrait"
+        android:configChanges="orientation|screenSize|keyboardHidden|uiMode|locale|fontScale"
+        android:windowSoftInputMode="adjustResize"
+        android:theme="@style/AppTheme">
+      <intent-filter>
+        <action android:name="android.intent.action.MAIN"/>
+        <category android:name="android.intent.category.LAUNCHER"/>
+      </intent-filter>
+    </activity>
+  </application>
+</manifest>

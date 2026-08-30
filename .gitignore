@@ -1,0 +1,8 @@
+.DS_Store
+node_modules
+android/build/classes/
+android/build/*.apk
+android/build/*.zip
+android/build/*.jar
+android/build/*.dex
+*.idsig

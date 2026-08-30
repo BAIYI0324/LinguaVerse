@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8"?>
+<network-security-config>
+    <base-config cleartextTrafficPermitted="true">
+        <trust-anchors>
+            <certificates src="system"/>
+        </trust-anchors>
+    </base-config>
+    <domain-config cleartextTrafficPermitted="true">
+        <!-- 有道发音 CDN -->
+        <domain includeSubdomains="true">dict.youdao.com</domain>
+        <domain includeSubdomains="true">shared.youdao.com</domain>
+        <!-- 海词发音 CDN -->
+        <domain includeSubdomains="true">dict.cn</domain>
+        <domain includeSubdomains="true">cdn.dict.cn</domain>
+        <!-- 百度翻译 CDN -->
+        <domain includeSubdomains="true">fanyi.baidu.com</domain>
+        <domain includeSubdomains="true">tts.baidu.com</domain>
+        <!-- Google TTS CDN (海外) -->
+        <domain includeSubdomains="true">translate.google.com</domain>
+        <domain includeSubdomains="true">ssl.gstatic.com</domain>
+        <!-- Cloudflare / jsdelivr (备份) -->
+        <domain includeSubdomains="true">cdn.jsdelivr.net</domain>
+        <domain includeSubdomains="true">cdnjs.cloudflare.com</domain>
+    </domain-config>
+</network-security-config>
