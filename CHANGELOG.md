@@ -1,0 +1,119 @@
+# Changelog · 语界 LinguaVerse
+
+所有重要变更将记录在本文件,格式遵循 [Keep a Changelog](https://keepachangelog.com/zh-CN/1.1.0/)。
+版本号遵循 [语义化版本](https://semver.org/lang/zh-CN/): `主版本.次版本.修订号`。
+
+---
+
+## [v1.0.0] - 2025-08-28
+
+> 首次多语种在线教育平台发布 — v1 历史版本。
+> **主要内容**: 英语 A1/A2/B1/B2 · 日语 N5/N4/N3 · 韩语 TOPIK I/II/III,
+> 覆盖单词课、语法课、听力课、口语课四大学习模块,支持注册/登录 SPA,
+> 学习进度追踪,成就系统,学习社区帖子板。
+
+### ✨ Added (新增)
+
+- **注册与登录系统** (Mock API 模拟: `POST /api/register` · `/api/login`, 600ms 延迟)
+  - 表单校验:必填项 / 邮箱格式 / 密码 ≥6 位 / 邮箱查重
+  - LocalStorage 会话持久化,刷新不丢失登录态
+
+- **SPA 顶部导航**: 首页 / 词书 / 社区 / 我的 四个入口,Hash Router 无刷新切换
+
+- **三语种分级词书**
+  | 语种 | 级别 | 单元 | 课时总数 |
+  |---|---|---|---|
+  | 🇬🇧 英语 | A1/A2/B1/B2 | 每级 2 单元 | 16 课时 |
+  | 🇯🇵 日语 | N5/N4/N3 | 每级 2 单元 | 12 课时 |
+  | 🇰🇷 韩语 | TOPIK I/II/III | 每级 2 单元 | 12 课时 |
+
+- **四大学习模块播放器**
+  - 📇 单词课: 卡片式,单词+音标+释义+例句+译文 五元老格式
+  - ✏️ 语法课: 4 选 1 选择题,带讲解解析
+  - 🎧 听力课: 浏览器 TTS 自动播放原文,选正确译文(干扰项随机打乱)
+  - 🎤 口语课: 示范朗读 + 自评模式(需要再练 / 读得不错)
+
+- **学习数据追踪**
+  - XP 结算(单词全额,语法/听力/口语按正确率比例)
+  - 连续打卡 streak(last 比对昨天)
+  - 课时完成记录 lessonsDone: {[lessonId]: {at, xp}}
+  - stats: {words: 学单词数, quiz: 答题数}
+
+- **成就系统** (10 枚)
+  🌱初次见面 · 🚀第一课时 · 🔥三日之约 · ⚡一周坚持 · 📖半百词汇 · 📚百词达成 ·
+  ✏️答题达人 · ⭐半千里程 · 🎯学习狂 · 🇬🇧英语学者
+
+- **学习社区帖子板**
+  - 3 条种子帖子(公告/打卡/求助)
+  - 标签选择器: 打卡 / 求助 / 心得 / 讨论
+  - 点赞切换 ❤️ / 评论嵌套 / 发布新帖
+  - 全部内容 LocalStorage 持久化
+
+- **「我的」页**: 头像卡片 + 4 项核心数据 + 各语言进度条 + 成就墙(含进度显示)
+
+### 📘 Docs
+- `docs/DESIGN-v1.md`: 架构设计(技术选型 / 模块划分 / 数据结构 / 流程)
+- `docs/TESTING-v1.md`: 58 条全量测试用例 + 性能 + 浏览器兼容性报告
+- `v1/README.md`: v1 快照说明(见 v1.0.0 tag)
+
+### 🐛 Bug Fixes (v1.0 迭代期)
+- V1-B2: 听力课时 4 选 1 选项重复 → 种子数据保证译文唯一
+- V1-B3: iOS Safari TTS 需要手势 → 新增「再听一次」按钮兜底
+- 路由刷新 hash 丢失 → window.addEventListener('hashchange', router) 加上启动 router()
+
+---
+
+## [v1.1.0] - 2025-08-29 (预发布 → 未实际 tag,作为 v2 升级基线)
+
+> 本版本仅在 CHANGELOG 中记录为 v1→v2 的过渡需求清单,
+> 作为实际 v2.0.0 实现的输入依据。
+
+### 🔄 Changed
+- **英语分级调整**: 废弃 A1/A2/B1/B2,改为 **CET-4 四级 / CET-6 六级**(贴合国内用户)
+- **英语单词条目格式升级**: 5 元 → 富格式 5 元(新增词根助记 + 3 条例句(真题/影视/日常)
+- **日韩词汇保留原有级别与格式**,运行时统一归一化接口
+
+### 🏗️ Planned Removal (在 v2 完成)
+- 移除 MockAPI 在线注册/登录 → 改为**本地多账号**体系
+- 移除顶部导航 → 改为 **MIUIX 底部 Tab 手机外壳 UI**
+- 移除社区帖子板(在 v2.1 重新设计再引入)
+
+---
+
+## [v2.0.0] - 2025-08-30
+
+> 重大更新版本: 四六级 + MIUIX 设计 + 不背单词式词卡 + SRS 复习算法 +
+> 本地账号(多用户切换 + 导入导出) + PWA 离线 + 安卓 APK。
+> 详见 `docs/DESIGN-v2.md`、`docs/TESTING-v2.md`、`docs/KNOWN-BUGS.md`。
+
+### ✨ Added
+- 英语词库: CET-4 三个单元 × CET-6 两个单元(核心/校园/情感 + 六级核心/职场),每单元词汇 12 个富格式(词根+三例句)
+- **不背单词式词卡播放器**: 3D 翻面卡片,正面单词+音标+🔊,背面释义+词根+真题例句
+- **SRS 间隔重复算法**: Box 0-5,间隔 [1,2,4,7,15,30] 天,到期单词出现在「复习」Tab 排队
+- **MIUIX/HyperOS 设计系统**: 手机外壳(桌面端带边框) · 底部 4 Tab 导航 · 渐变色主按钮 · 圆角 24/18/14
+- **本地多账号**: 引导页三步(昵称+头像 → 语言+级别 → 每日目标),支持账号切换 + 创建新号
+- **数据管理**: 一键导出 JSON 备份、一键清空学习记录、朗读语速切换 0.5~1.5x、每日目标 10/20/30/40
+- **成就系统 12 枚**: 加入 v2 的 join / first-deck / streak-3~7 / words-50,200 / review-50 / grammar-20 / listen-20 / speak-10 / xp-1000 / level-5
+- **PWA**: manifest.json + Service Worker (cache-first yujie-v3) + 兼容 icon maskable 512
+- **安卓 APK 工程**: WebView 外壳 Assets 虚拟主机 https://localhost/ → 保证 localStorage + SW + TTS
+  - build.sh 直编 aapt2 + javac + d8 + zipalign + apksigner
+  - yujie.keystore (密码 yujie2026) 签名
+  - 产物: 语界-LinguaVerse-v3.0.apk (约 474KB,已签名可直接安装)
+
+### 🔧 Fixed (详见 KNOWN-BUGS.md)
+- data.js:575 语法错误 `}` → `]`
+- SEED_POSTS 未定义 → 移除对该引用/重新定义
+- `hidden` 属性样式不生效 → 全局 `[hidden]{display:none!important}`
+- 非词汇课时 quizTotal 报错 → 改为 `(content.words||[]).length`
+- 退出登录空指针 → toggleUserMenu 加 `if(!U) return`
+- data.js 撇号 I'm/won't 未转义 → XSS `esc()` 统一处理
+- 引导页第二步高度不足不可见 → `.onboard { height → min-height:100% }`
+- 词卡播放器 `hidden` 仍显示 → 全局 `[hidden]` CSS 提升优先级
+- 选择头像清空已输入昵称 → 点击头像时先 `ob.name = $('#obName').value.trim()`
+- 「join」成就缺 `check` 函数 → 显式 `check:u=>true`
+- JDK 25 d8 NullPointerException → build.sh 切换 build-tools 36.0.0
+
+### 📘 Docs
+- `docs/DESIGN-v2.md`: MIUIX 设计 / SRS 算法 / PWA / 安卓工程设计
+- `docs/TESTING-v2.md`: 全流程 60+ 用例,控制台零错误
+- `docs/KNOWN-BUGS.md`: v2 开发过程 11 条 bug 列表 + 根因 + 修复提交
