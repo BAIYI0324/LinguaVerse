@@ -1703,20 +1703,8 @@ function finishQuizSession(){
 }
 
 /* ============================================================
-   每日一句
+   每日一句 (数据在 data.js 的 DAILY_QUOTES 中定义, 此处不再重复声明)
    ============================================================ */
-const DAILY_QUOTES = [
-  {en:'The best way to predict the future is to create it.', cn:'预测未来最好的方法就是去创造它。'},
-  {en:'A journey of a thousand miles begins with a single step.', cn:'千里之行，始于足下。'},
-  {en:'It does not matter how slowly you go as long as you do not stop.', cn:'走得慢也没关系，只要不停步。'},
-  {en:'Success is the sum of small efforts repeated day in and day out.', cn:'成功就是日复一日微小努力的总和。'},
-  {en:'Learning never exhausts the mind.', cn:'学习永远不会让头脑枯竭。'},
-  {en:'Language is the road map of a culture.', cn:'语言是一种文化的地图。'},
-  {en:'One language sets you in a corridor for life. Two languages open every door along the way.', cn:'一门语言让你走上走廊，两门语言打开沿途每扇门。'},
-  {en:'The limits of my language mean the limits of my world.', cn:'我语言的边界就是我世界的边界。'},
-  {en:'To have another language is to possess a second soul.', cn:'掌握另一门语言，就是拥有第二个灵魂。'},
-  {en:'Practice makes perfect, and patience is bitter, but its fruit is sweet.', cn:'熟能生巧；忍耐虽苦，果实却甜。'},
-];
 
 /* ============================================================
    全局初始化 + 应用外壳注入 (唯一一次 DOM 创建)

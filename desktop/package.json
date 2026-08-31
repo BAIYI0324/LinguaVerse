@@ -1,0 +1,16 @@
+{
+  "name": "linguaverse",
+  "productName": "LinguaVerse",
+  "version": "5.0.0",
+  "description": "语界 LinguaVerse - 多语种学习平台 (四六级/日语/韩语), 纯内置离线TTS",
+  "main": "main.js",
+  "author": "BAIYI0324",
+  "license": "GPL-3.0",
+  "scripts": {
+    "start": "electron .",
+    "dist": "electron-packager . LinguaVerse --platform=win32 --arch=x64 --out=dist --overwrite --asar --prune=true"
+  },
+  "devDependencies": {
+    "electron-packager": "^17.1.2"
+  }
+}

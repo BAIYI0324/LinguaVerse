@@ -1,11 +1,10 @@
-/* 语界 LinguaVerse v3.0 · Service Worker
+/* 语界 LinguaVerse v5.0 · Service Worker
    策略:
-   - Shell (HTML/CSS/JS/图片): 缓存优先 (Cache First), 离线秒开
-   - 接口(非GET) + 跨域音频: 网络优先, 失败忽略
-   - 跨域 CDN mp3: 尝试 clone 入缓存,失败忽略(交给应用层兜底)
+   - 静态资源: 网络优先(保证升级即时生效), 失败回退缓存, 彻底离线可用
+   - 缓存名带版本号, 升级时旧缓存自动清理, 杜绝"升级后白屏"
 */
-const CACHE_SHELL = 'yujie-shell-v3.0';
-const CACHE_RUNTIME = 'yujie-runtime-v3.0';
+const CACHE_SHELL = 'yujie-shell-v5.0';
+const CACHE_RUNTIME = 'yujie-runtime-v5.0';
 const SHELL = [
   './',
   './index.html',
@@ -13,13 +12,22 @@ const SHELL = [
   './css/styles.css',
   './js/data.js',
   './js/app.js',
+  './js/data_words_patch.js',
+  './js/vendor/mespeak/mespeak_config.js',
+  './js/vendor/mespeak/ESpeak.js',
+  './js/vendor/mespeak/mespeak.js',
+  './js/vendor/mespeak/voice-en-us.js',
+  './js/vendor/mespeak/voice-zh.js',
 ];
 
 self.addEventListener('install', e => {
   e.waitUntil(
-    caches.open(CACHE_SHELL).then(c => c.addAll(SHELL)).then(() => self.skipWaiting())
+    caches.open(CACHE_SHELL)
+      .then(c => c.addAll(SHELL).catch(()=>{}))  // 单项失败不阻塞安装
+      .then(() => self.skipWaiting())
   );
 });
+
 self.addEventListener('activate', e => {
   e.waitUntil(
     caches.keys().then(keys =>
@@ -33,36 +41,26 @@ self.addEventListener('fetch', e => {
   if (req.method !== 'GET') return;
   const url = new URL(req.url);
 
-  // ① 同源静态: 缓存优先
+  // 同源: 网络优先, 失败用缓存 (升级即时生效, 离线仍可用)
   if (url.origin === location.origin) {
-    // 导航请求: 网络优先(尽量拿到最新html), 失败用离线index
-    if (req.mode === 'navigate') {
-      e.respondWith(
-        fetch(req).then(res => {
-          const copy = res.clone();
-          caches.open(CACHE_SHELL).then(c => c.put(req, copy));
-          return res;
-        }).catch(() => caches.match(req).then(hit => hit || caches.match('./index.html')))
-      );
-      return;
-    }
     e.respondWith(
-      caches.match(req).then(hit => hit || fetch(req).then(res => {
-        // 缓存动态资源(避免SW崩溃)
+      fetch(req).then(res => {
         if (res && res.ok && res.status === 200) {
           const copy = res.clone();
-          caches.open(CACHE_RUNTIME).then(c => c.put(req, copy)).catch(()=>{});
+          caches.open(CACHE_SHELL).then(c => c.put(req, copy)).catch(()=>{});
         }
         return res;
-      }).catch(() => caches.match('./index.html')))
+      }).catch(() =>
+        caches.match(req).then(hit => hit || (req.mode === 'navigate' ? caches.match('./index.html') : Response.error()))
+      )
     );
     return;
   }
 
-  // ② 跨域 mp3: 网络优先, 成功后尝试缓存
+  // 跨域音频: 网络优先, 成功后缓存
   if (/\.(mp3|wav|ogg|m4a|aac)(\?|$)/i.test(url.pathname)) {
     e.respondWith(
-      caches.match(req).then(hit => hit || fetch(req).then(res => {
+      fetch(req).then(res => {
         if (res && res.ok) {
           try {
             const copy = res.clone();
@@ -70,14 +68,14 @@ self.addEventListener('fetch', e => {
           } catch(_) {}
         }
         return res;
-      }).catch(() => hit || new Response('', {status: 503})))
+      }).catch(() => caches.match(req).then(hit => hit || new Response('', {status: 503})))
     );
     return;
   }
 
-  // ③ 其他跨域(字体等): 网络优先
+  // 其他跨域(字体等): 网络优先
   e.respondWith(
-    caches.match(req).then(hit => hit || fetch(req).then(res => {
+    fetch(req).then(res => {
       if (res && res.ok) {
         try {
           const copy = res.clone();
@@ -85,6 +83,6 @@ self.addEventListener('fetch', e => {
         } catch(_) {}
       }
       return res;
-    }).catch(() => hit || new Response('', {status: 503})))
+    }).catch(() => caches.match(req).then(hit => hit || new Response('', {status: 503})))
   );
 });

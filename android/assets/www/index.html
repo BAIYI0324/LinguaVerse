@@ -12,10 +12,24 @@
 <link rel="icon" href="icons/icon-192.png">
 <link rel="apple-touch-icon" href="icons/icon-192.png">
 <link rel="stylesheet" href="css/styles.css">
+<script>
+/* 桌面版(Electron)检测: 注入 desktop 类并加载 Win11 Fluent 样式 */
+(function(){
+  try{
+    if(window.IS_DESKTOP || /Electron\/\d/i.test(navigator.userAgent)){
+      document.documentElement.classList.add('desktop');
+      var l=document.createElement('link');
+      l.rel='stylesheet'; l.href='css/desktop.css';
+      document.head.appendChild(l);
+    }
+  }catch(e){}
+})();
+</script>
 </head>
 <body>
 <!-- 纯内置离线运行: 不依赖外部TTS服务/系统已安装TTS软件, TTS引擎在 js/vendor/mespeak/ -->
 <script src="js/vendor/mespeak/mespeak_config.js"></script>
+<script src="js/vendor/mespeak/ESpeak.js"></script>
 <script src="js/vendor/mespeak/mespeak.js"></script>
 <script src="js/vendor/mespeak/voice-en-us.js"></script>
 <script src="js/vendor/mespeak/voice-zh.js"></script>

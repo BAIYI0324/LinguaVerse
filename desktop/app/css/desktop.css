@@ -1,0 +1,184 @@
+/* ============================================================
+   语界 LinguaVerse · Windows 11 Fluent Design 桌面样式
+   设计语言: Segoe UI Variable / Mica 质感 / 8px 圆角 / 强调色 #0067C0
+   布局: 左侧 NavigationView 导航 + 右侧内容画布 + 顶部自定义标题栏
+   激活条件: html.desktop (由 Electron preload 注入)
+   ============================================================ */
+
+/* ---------- Fluent 设计变量覆盖 ---------- */
+html.desktop{
+  /* Win11 默认强调色 (Accent) */
+  --primary:#0067C0;
+  --primary-2:#2B88D8;
+  --primary-deep:#005BA1;
+  --primary-soft:#E8F1FB;
+
+  /* Win11 中性层 (Mica 亮色) */
+  --bg:#F3F3F3;
+  --bg-2:#EAEAEA;
+  --card:rgba(253,253,253,.82);
+  --text:#1B1B1B;
+  --text-2:#5D5D5D;
+  --text-3:#9E9E9E;
+  --line:rgba(0,0,0,.07);
+
+  /* Win11 控件圆角体系: 4/4/8/8 */
+  --r-xl:8px;
+  --r-lg:8px;
+  --r-md:6px;
+  --r-sm:4px;
+  --r-xs:4px;
+
+  /* Fluent 海拔阴影 (更克制) */
+  --sh-sm:0 1px 2px rgba(0,0,0,.06);
+  --sh-md:0 2px 6px rgba(0,0,0,.08);
+  --sh-lg:0 8px 24px rgba(0,0,0,.12);
+  --sh-card:0 1px 3px rgba(0,0,0,.05),0 4px 12px rgba(0,0,0,.04);
+
+  /* Segoe UI Variable (Win11 系统字体) */
+  --font:"Segoe UI Variable Display","Segoe UI Variable Text","Segoe UI","Microsoft YaHei UI","Microsoft YaHei",system-ui,sans-serif;
+}
+
+/* ---------- 窗口级布局 ---------- */
+html.desktop body{
+  background:#F3F3F3;
+  display:block;
+  overflow:hidden;
+}
+
+/* 桌面: 去手机壳, 平铺整窗 */
+html.desktop .phone{
+  max-width:none;
+  width:100vw;
+  height:100vh;
+  margin:0;
+  border-radius:0;
+  box-shadow:none;
+  background:transparent;
+  flex-direction:row;
+}
+
+/* 隐藏手机状态栏 */
+html.desktop .statusbar{display:none!important}
+
+/* ---------- 顶部标题栏 (可拖拽区, 右侧为系统窗口控件占位) ---------- */
+html.desktop .app-scroll{position:relative}
+html.desktop .app-scroll::before{
+  content:'';
+  position:fixed;
+  top:0;left:224px;right:0;height:44px;
+  -webkit-app-region:drag;
+  z-index:80;
+  pointer-events:auto;
+}
+
+/* ---------- 左侧 NavigationView ---------- */
+html.desktop .tabbar{
+  position:fixed;
+  left:0;top:0;bottom:0;
+  width:224px;
+  flex-direction:column;
+  align-items:stretch;
+  gap:2px;
+  padding:52px 10px 12px;
+  background:rgba(243,243,243,.72);
+  backdrop-filter:blur(60px) saturate(160%);
+  -webkit-backdrop-filter:blur(60px) saturate(160%);
+  border-top:none;
+  border-right:1px solid rgba(0,0,0,.06);
+  z-index:90;
+}
+
+/* 导航项: Win11 风格 (图标+文字横排, 4px 圆角, 选中淡强调底) */
+html.desktop .tab{
+  flex:none;
+  flex-direction:row;
+  justify-content:flex-start;
+  align-items:center;
+  gap:14px;
+  padding:9px 12px;
+  border-radius:4px;
+  color:#1B1B1B;
+  position:relative;
+  transition:background .12s ease;
+}
+html.desktop .tab svg{width:17px;height:17px;transform:none!important}
+html.desktop .tab span{font-size:14px;font-weight:600;letter-spacing:0}
+html.desktop .tab:hover{background:rgba(0,0,0,.045)}
+html.desktop .tab:active{transform:none;background:rgba(0,0,0,.07)}
+html.desktop .tab.active{color:var(--primary);background:rgba(0,103,192,.09)}
+/* 选中项左侧强调色指示条 (Win11 NavigationView) */
+html.desktop .tab.active::before{
+  content:'';
+  position:absolute;
+  left:-10px;top:50%;transform:translateY(-50%);
+  width:3px;height:16px;
+  border-radius:2px;
+  background:var(--primary);
+}
+/* 导航顶部应用标题 */
+html.desktop .tabbar::before{
+  content:'语界 LinguaVerse';
+  position:absolute;
+  top:12px;left:20px;
+  font-size:13.5px;
+  font-weight:700;
+  color:#1B1B1B;
+  letter-spacing:.2px;
+  -webkit-app-region:drag;
+}
+
+/* ---------- 内容画布 ---------- */
+html.desktop .app-scroll{
+  margin-left:224px;
+  padding:56px 40px 40px;
+  max-width:1240px;
+}
+html.desktop .app-scroll::-webkit-scrollbar{display:block;width:12px}
+html.desktop .app-scroll::-webkit-scrollbar-thumb{
+  background:rgba(0,0,0,.22);
+  border:4px solid transparent;
+  background-clip:content-box;
+  border-radius:8px;
+}
+html.desktop .app-scroll::-webkit-scrollbar-thumb:hover{background-color:rgba(0,0,0,.34);background-clip:content-box;border:3px solid transparent}
+html.desktop .app-scroll::-webkit-scrollbar-track{background:transparent}
+
+/* ---------- Fluent 卡片 (亚克力) ---------- */
+html.desktop .card,
+html.desktop .card-xl{
+  background:rgba(253,253,253,.78);
+  backdrop-filter:blur(30px) saturate(150%);
+  -webkit-backdrop-filter:blur(30px) saturate(150%);
+  border:1px solid rgba(0,0,0,.055);
+  box-shadow:0 1px 3px rgba(0,0,0,.05),0 4px 14px rgba(0,0,0,.045);
+}
+html.desktop .card:hover{border-color:rgba(0,103,192,.28)}
+
+/* ---------- Fluent 按钮 ---------- */
+html.desktop .btn{border-radius:4px;font-weight:600}
+html.desktop .btn:active{transform:none;opacity:.85}
+html.desktop .btn-primary{
+  background:var(--primary);
+  color:#fff;
+  box-shadow:inset 0 0 0 1px rgba(0,0,0,.06);
+}
+html.desktop .btn-primary:hover{background:#1975C5}
+html.desktop .btn-primary:active{background:#005BA1}
+html.desktop .btn-ghost{background:rgba(0,0,0,.038)}
+html.desktop .btn-ghost:hover{background:rgba(0,0,0,.06)}
+html.desktop .btn-soft{background:rgba(0,0,0,.038)}
+html.desktop .btn-soft:hover{background:rgba(0,0,0,.06)}
+html.desktop .btn-sm{border-radius:4px}
+
+/* ---------- Toast / 弹窗 Fluent 化 ---------- */
+html.desktop .toasts{top:56px}
+html.desktop .toast{
+  border-radius:8px;
+  background:rgba(43,43,43,.92);
+  backdrop-filter:blur(20px);
+  color:#fff;
+  box-shadow:0 8px 24px rgba(0,0,0,.22);
+}
+html.desktop #modalMask .modal,
+html.desktop .modal-mask .modal{border-radius:8px}

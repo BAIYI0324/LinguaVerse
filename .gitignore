@@ -6,3 +6,5 @@ android/build/*.zip
 android/build/*.jar
 android/build/*.dex
 *.idsig
+desktop/dist/
+desktop/node_modules/

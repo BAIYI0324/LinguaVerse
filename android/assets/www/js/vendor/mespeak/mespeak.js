@@ -9,7 +9,10 @@
 */
 "use strict";
 
-var ESpeak = require("./ESpeak.js")
+// browser/node 双兼容: 浏览器从全局 window.ESpeak 取(由 ESpeak.js 注入), Node 走 require
+var ESpeak = (typeof window !== 'undefined' && typeof window.ESpeak === 'function')
+	? window.ESpeak
+	: ((typeof require !== 'undefined') ? require("./ESpeak.js") : null)
 
 /* meScript.js essential changes start here */
 
@@ -950,8 +953,8 @@ function unloadHandler(event) {
 
 if (typeof window !== 'undefined') window.addEventListener('unload', unloadHandler, false);
 
-// public interface
-module.exports = {
+// public interface (browser/node 双兼容)
+var mespeakExports = {
 	speak: speak,
 	speakMultipart: speakMultipart,
 	loadConfig: loadConfig,
@@ -970,11 +973,11 @@ module.exports = {
 
 // ===== browser shim: export to global =====
 if (typeof window !== 'undefined') {
-  if (!window.mespeak) window.mespeak = module.exports;
-  if (!window.meSpeak) window.meSpeak = module.exports;
+  if (!window.mespeak) window.mespeak = mespeakExports;
+  if (!window.meSpeak) window.meSpeak = mespeakExports;
 }
 if (typeof globalThis !== 'undefined') {
-  if (!globalThis.mespeak) globalThis.mespeak = (typeof module !== 'undefined') ? module.exports : window.mespeak;
-  if (!globalThis.meSpeak) globalThis.meSpeak = (typeof module !== 'undefined') ? module.exports : window.meSpeak;
+  if (!globalThis.mespeak) globalThis.mespeak = (typeof module !== 'undefined' && module.exports) ? module.exports : mespeakExports;
+  if (!globalThis.meSpeak) globalThis.meSpeak = (typeof module !== 'undefined' && module.exports) ? module.exports : mespeakExports;
 }
 

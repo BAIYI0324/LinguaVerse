@@ -1,4 +1,5 @@
-module.exports = function ESpeak() {
+// browser/node 双兼容: 浏览器声明全局构造函数并注入 window.ESpeak (文件末尾)
+var ESpeak = function ESpeak() {
 // emscripten implementation
 
 var vprint = console.warn
@@ -3535,10 +3536,10 @@ var _llvm_dbg_declare; // stub for _llvm_dbg_declare
       return (chr >= 48 && chr <= 57) ||       // 0 .. 9
              (chr >= 97 && chr <= 122) ||      // a .. z
              (chr >= 65 && chr <= 90) ||       // A .. Z
-             (chr >= 0xC0 && chr <= 0xD6) ||   // � .. �
-             (chr >= 0xDF && chr <= 0xF6) ||   // � .. �
-             (chr >= 0xD8 && chr <= 0xDE) ||   // � .. �
-             (chr >= 0xF8 && chr <= 0xFF);     // � .. �
+             (chr >= 0xC0 && chr <= 0xD6) ||   // À .. Ö
+             (chr >= 0xDF && chr <= 0xF6) ||   // ß .. ö
+             (chr >= 0xD8 && chr <= 0xDE) ||   // Ø .. Þ
+             (chr >= 0xF8 && chr <= 0xFF);     // ø .. ÿ
     }
 // end of batch
 
@@ -3619,22 +3620,22 @@ var _llvm_dbg_declare; // stub for _llvm_dbg_declare
   function _isalpha(chr) {
       return (chr >= 97 && chr <= 122) ||      // a .. z
              (chr >= 65 && chr <= 90) ||       // A .. Z
-             (chr >= 0xC0 && chr <= 0xD6) ||   // � .. �
-             (chr >= 0xDF && chr <= 0xF6) ||   // � .. �
-             (chr >= 0xD8 && chr <= 0xDE) ||   // � .. �
-             (chr >= 0xF8 && chr <= 0xFF);     // � .. �
+             (chr >= 0xC0 && chr <= 0xD6) ||   // À .. Ö
+             (chr >= 0xDF && chr <= 0xF6) ||   // ß .. ö
+             (chr >= 0xD8 && chr <= 0xDE) ||   // Ø .. Þ
+             (chr >= 0xF8 && chr <= 0xFF);     // ø .. ÿ
     }
 
   function _isupper(chr) {
       return (chr >= 65 && chr <= 90) ||       // A .. Z
-             (chr >= 0xC0 && chr <= 0xD6) ||   // � .. �
-             (chr >= 0xD8 && chr <= 0xDE);     // � .. �
+             (chr >= 0xC0 && chr <= 0xD6) ||   // À .. Ö
+             (chr >= 0xD8 && chr <= 0xDE);     // Ø .. Þ
     }
 
   function _islower(chr) {
       return (chr >= 97 && chr <= 122) ||      // a .. z
-             (chr >= 0xDF && chr <= 0xF6) ||   // � .. �
-             (chr >= 0xF8 && chr <= 0xFF);     // � .. �
+             (chr >= 0xDF && chr <= 0xF6) ||   // ß .. ö
+             (chr >= 0xF8 && chr <= 0xFF);     // ø .. ÿ
     }
 
   function _ispunct(chr) {
@@ -83334,3 +83335,6 @@ return {
 	run: run
 };
 }
+// browser 注入全局 ESpeak 构造函数
+if (typeof window !== "undefined") { window.ESpeak = ESpeak; }
+else if (typeof module !== "undefined" && module.exports) { module.exports = ESpeak; }

@@ -1,8 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.yujie.app"
-    android:versionCode="5"
-    android:versionName="4.0.0">
+    android:versionCode="6"
+  android:versionName="5.0.0">
 
   <!-- 语界 v4.0 纯内置离线版: 运行不依赖任何外部服务/系统TTS软件
        保留 INTERNET 权限为可选联网功能 (例如用户手动上传词典/备份), 离线学习完全不依赖它。
