@@ -1,11 +1,12 @@
 /* ============================================================
-   语界 · 应用逻辑  v4.0
+   语界 · 应用逻辑  v4.1
    本地账号 · 不背单词式词卡 · SRS 间隔复习 · 澎湃美学 UI
-   🔊 发音（完全内置，零外部依赖）:
-      ① meSpeak.js 纯 JS eSpeak Emscripten 合成 WAV （不依赖任何已安装TTS软件/系统服务）
-      ② 首次合成后 WAV Blob 永久缓存到 IndexedDB, 下次命中秒开
-      ③ 不再联网请求词典 CDN, 不调用安卓系统 TTS
-   ✨ 体验: 左右滑动翻卡 / 长按发音 / 自动朗读 / 首页一键继续
+   🔊 发音（多级引擎, 自动选择）:
+      ① 在线: 微软 Edge TTS 自然语音 (WebSocket 直连, 免费, 音质最佳)
+      ② 系统语音: speechSynthesis (设备本地, 自然音质)
+      ③ 最终回退: meSpeak.js 纯 JS 合成 WAV (零外部依赖, 保证离线可用)
+      ④ 在线合成结果 Blob 永久缓存到 IndexedDB, 下次命中秒开
+   ✨ 体验: 左右滑动评分 / 上下滑动翻面 / 长按发音 / 自动朗读
    ============================================================ */
 'use strict';
 
@@ -189,9 +190,199 @@ const ME = {
   },
   stop(){
     try{ if(this.audioEl) this.audioEl.pause(); }catch(_){}
+    try{ if(window.speechSynthesis) window.speechSynthesis.cancel(); }catch(_){}
     const ms = window.mespeak || window.meSpeak;
     if(ms && ms.resetQueue) try{ ms.resetQueue(); }catch(_){}
     if(ms && ms.stop) try{ ms.stop(); }catch(_){}
+  }
+};
+
+/* ============================================================
+   🔊 在线自然语音 · Microsoft Edge TTS
+   (WebSocket 直连微软朗读服务, 免费, 无需 API Key, 音质自然)
+   失败 / 离线时自动回退 meSpeak 内置引擎。
+   ============================================================ */
+
+/* 纯 JS SHA-256 (用于生成 Sec-MS-GEC 鉴权参数, 兼容无 crypto.subtle 环境) */
+function sha256hex(str){
+  const K=[0x428a2f98,0x71374491,0xb5c0fbcf,0xe9b5dba5,0x3956c25b,0x59f111f1,0x923f82a4,0xab1c5ed5,
+    0xd807aa98,0x12835b01,0x243185be,0x550c7dc3,0x72be5d74,0x80deb1fe,0x9bdc06a7,0xc19bf174,
+    0xe49b69c1,0xefbe4786,0x0fc19dc6,0x240ca1cc,0x2de92c6f,0x4a7484aa,0x5cb0a9dc,0x76f988da,
+    0x983e5152,0xa831c66d,0xb00327c8,0xbf597fc7,0xc6e00bf3,0xd5a79147,0x06ca6351,0x14292967,
+    0x27b70a85,0x2e1b2138,0x4d2c6dfc,0x53380d13,0x650a7354,0x766a0abb,0x81c2c92e,0x92722c85,
+    0xa2bfe8a1,0xa81a664b,0xc24b8b70,0xc76c51a3,0xd192e819,0xd6990624,0xf40e3585,0x106aa070,
+    0x19a4c116,0x1e376c08,0x2748774c,0x34b0bcb5,0x391c0cb3,0x4ed8aa4a,0x5b9cca4f,0x682e6ff3,
+    0x748f82ee,0x78a5636f,0x84c87814,0x8cc70208,0x90befffa,0xa4506ceb,0xbef9a3f7,0xc67178f2];
+  const rr=(x,n)=>(x>>>n)|(x<<(32-n));
+  let bytes;
+  try{ bytes = new TextEncoder().encode(str); }
+  catch(_){ const s=unescape(encodeURIComponent(str)); bytes=[]; for(let i=0;i<s.length;i++)bytes.push(s.charCodeAt(i)&255); }
+  const l = bytes.length;
+  const total = ((l+9+63)>>6)<<6;             // 补齐到 64 字节倍数
+  const pad = new Array(total).fill(0);
+  for(let i=0;i<l;i++) pad[i]=bytes[i];
+  pad[l]=0x80;
+  const bits = l*8;                            // 消息长度 < 512MB, 高32位恒为0
+  pad[total-1]=bits&255; pad[total-2]=(bits>>>8)&255; pad[total-3]=(bits>>>16)&255; pad[total-4]=(bits>>>24)&255;
+  const H=[0x6a09e667,0xbb67ae85,0x3c6ef372,0xa54ff53a,0x510e527f,0x9b05688c,0x1f83d9ab,0x5be0cd19];
+  for(let off=0; off<total; off+=64){
+    const w=new Array(64);
+    for(let i=0;i<16;i++) w[i]=(pad[off+i*4]<<24)|(pad[off+i*4+1]<<16)|(pad[off+i*4+2]<<8)|pad[off+i*4+3];
+    for(let i=16;i<64;i++){
+      const s0=rr(w[i-15],7)^rr(w[i-15],18)^(w[i-15]>>>3);
+      const s1=rr(w[i-2],17)^rr(w[i-2],19)^(w[i-2]>>>10);
+      w[i]=(w[i-16]+s0+w[i-7]+s1)|0;
+    }
+    let a=H[0],b=H[1],c=H[2],d=H[3],e=H[4],f=H[5],g=H[6],h=H[7];
+    for(let i=0;i<64;i++){
+      const S1=rr(e,6)^rr(e,11)^rr(e,25), ch=(e&f)^(~e&g);
+      const t1=(h+S1+ch+K[i]+w[i])|0;
+      const S0=rr(a,2)^rr(a,13)^rr(a,22), mj=(a&b)^(a&c)^(b&c);
+      const t2=(S0+mj)|0;
+      h=g;g=f;f=e;e=(d+t1)|0;d=c;c=b;b=a;a=(t1+t2)|0;
+    }
+    H[0]=(H[0]+a)|0;H[1]=(H[1]+b)|0;H[2]=(H[2]+c)|0;H[3]=(H[3]+d)|0;
+    H[4]=(H[4]+e)|0;H[5]=(H[5]+f)|0;H[6]=(H[6]+g)|0;H[7]=(H[7]+h)|0;
+  }
+  return H.map(x=>(x>>>0).toString(16).padStart(8,'0')).join('');
+}
+
+const ETTS = {
+  TOKEN: '6A5AA1D4EAFF4E9FB37E23D68491D6F4',   // Edge 公开 TrustedClientToken
+  BASE : 'wss://speech.platform.bing.com/consumer/speech/synthesize/readaloud/edge/v1',
+  GEC_VER: '1-143.0.3650.75',                  // 须与当前 Edge 版本同步, 过旧会被服务端 403
+  VOICES: {
+    en: { us:'en-US-AriaNeural',  gb:'en-GB-SoniaNeural' },
+    zh: 'zh-CN-XiaoxiaoNeural',
+    ja: 'ja-JP-NanamiNeural',
+    ko: 'ko-KR-SunHiNeural',
+  },
+  uuid(){
+    const h='0123456789abcdef'; let s='';
+    for(let i=0;i<32;i++) s+=h[Math.floor(Math.random()*16)];
+    return s;
+  },
+  /* Sec-MS-GEC = SHA-256(TrustedClientToken + WindowsFileTime) 大写hex; 时间取整到5分钟 */
+  secGec(){
+    const WIN_EPOCH = 11644473600;              // 1601→1970 秒差
+    const secs = Math.floor(Date.now()/1000/300)*300 + WIN_EPOCH;
+    return sha256hex(this.TOKEN + secs + '0000000').toUpperCase();   // ×10^7 = 100ns 刻度
+  },
+  voiceOf(langId, accent){
+    const v = this.VOICES[langId] || this.VOICES.en;
+    if(typeof v === 'string') return v;
+    return (langId==='en' && accent==='british') ? v.gb : v.us;
+  },
+  rateFmt(r){
+    const p = Math.round(((r||1)-1)*100);
+    return p===0 ? 'default' : (p>0?'+':'')+p+'%';
+  },
+  /* 合成自然语音, resolve(audio/mpeg Blob), 失败 reject */
+  synthesize(text, langId, userRate, accent){
+    return new Promise((resolve, reject)=>{
+      let voice;
+      try{ voice = this.voiceOf(langId, accent); }catch(e){ return reject(e); }
+      if(!voice) return reject(new Error('etts-no-voice'));
+      const connectId = this.uuid();
+      const url = this.BASE
+        + '?TrustedClientToken=' + this.TOKEN
+        + '&Sec-MS-GEC=' + this.secGec()
+        + '&Sec-MS-GEC-Version=' + this.GEC_VER
+        + '&ConnectionId=' + connectId;
+      let ws;
+      try{ ws = new WebSocket(url); }
+      catch(e){ return reject(e); }
+      ws.binaryType = 'arraybuffer';
+      const chunks = [];
+      let done = false;
+      const finish = (err, blob)=>{
+        if(done) return; done = true;
+        clearTimeout(timer);
+        try{ ws.close(); }catch(_){}
+        if(err) reject(err); else resolve(blob);
+      };
+      const timer = setTimeout(()=>finish(new Error('etts-timeout')), 15000);
+      const dstr = ()=>{ try{ return new Date().toString(); }catch(_){ return ''; } };
+      ws.onopen = ()=>{
+        try{
+          ws.send(
+            'X-Timestamp:'+dstr()+'\r\n'
+            + 'Content-Type:application/json; charset=utf-8\r\n'
+            + 'Path:speech.config\r\n\r\n'
+            + JSON.stringify({context:{synthesis:{audio:{
+                metadataoptions:{sentenceBoundaryEnabled:'false', wordBoundaryEnabled:'false'},
+                outputFormat:'audio-24khz-48kbitrate-mono-mp3'}}}})
+          );
+          const escT = String(text).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+          const locale = voice.split('-').slice(0,2).join('-');
+          const ssml = "<speak version='1.0' xmlns='http://www.w3.org/2001/10/synthesis' xml:lang='"+locale+"'>"
+            + "<voice name='"+voice+"'><prosody rate='"+this.rateFmt(userRate)+"' volume='+0%'>"+escT+"</prosody></voice></speak>";
+          ws.send(
+            'X-RequestId:'+this.uuid()+'\r\n'
+            + 'Content-Type:application/ssml+xml\r\n'
+            + 'X-Timestamp:'+dstr()+'Z\r\n'
+            + 'Path:ssml\r\n\r\n' + ssml
+          );
+        }catch(e){ finish(e); }
+      };
+      ws.onmessage = ev=>{
+        if(done) return;
+        if(typeof ev.data === 'string'){
+          const m = /Path:(\w+)/.exec(ev.data);
+          if(m && m[1] === 'turn.end'){
+            if(chunks.length){
+              const size = chunks.reduce((n,c)=>n+c.length, 0);
+              const out = new Uint8Array(size);
+              let o = 0; chunks.forEach(c=>{ out.set(c, o); o += c.length; });
+              finish(null, new Blob([out], {type:'audio/mpeg'}));
+            } else finish(new Error('etts-empty'));
+          }
+          return;
+        }
+        try{                                    // 二进制帧: 头2字节(大端)=头部长度, 其后为音频
+          const d = new Uint8Array(ev.data);
+          if(d.length > 2){
+            const hlen = (d[0]<<8)|d[1];
+            if(d.length > hlen+2) chunks.push(d.slice(hlen+2));
+          }
+        }catch(_){}
+      };
+      ws.onerror  = ()=>finish(new Error('etts-error'));
+      ws.onclose  = ()=>{ if(!done) finish(new Error('etts-close')); };
+    });
+  }
+};
+
+/* 系统语音 (浏览器/WebView speechSynthesis): 音质通常自然, 但依赖设备已装语音包且不可缓存 */
+const SYS = {
+  findVoice(langId){
+    try{
+      const ss = window.speechSynthesis;
+      if(!ss) return null;
+      const target = {en:'en', zh:'zh', ja:'ja', ko:'ko'}[langId] || 'en';
+      return ss.getVoices().find(v => (v.lang||'').toLowerCase().replace('_','-').startsWith(target)) || null;
+    }catch(_){ return null; }
+  },
+  speak(text, langId, rate){
+    return new Promise(res=>{
+      try{
+        const ss = window.speechSynthesis;
+        if(!ss) return res(false);
+        const u = new SpeechSynthesisUtterance(text);
+        const v = this.findVoice(langId);
+        if(v){ u.voice = v; u.lang = v.lang; }
+        else  { u.lang = {en:'en-US',zh:'zh-CN',ja:'ja-JP',ko:'ko-KR'}[langId] || 'en-US'; }
+        u.rate = Math.max(0.4, Math.min(2, rate||1));
+        let settled = false;
+        const done = ok => { if(settled) return; settled = true; clearTimeout(timer); res(!!ok); };
+        const timer = setTimeout(()=>done(false), 12000);
+        u.onend  = ()=>done(true);
+        u.onerror = ()=>done(false);
+        ss.speak(u);
+        // 部分WebView不回调事件: 1.2秒内未开始朗读则判失败走回退
+        setTimeout(()=>{ try{ if(!settled && !ss.speaking && !ss.pending) done(false); }catch(_){} }, 1200);
+      }catch(e){ res(false); }
+    });
   }
 };
 
@@ -235,7 +426,7 @@ const AUD = {
   },
 };
 
-/* ---------- 公共 speak() 入口（零外部依赖） ---------- */
+/* ---------- 公共 speak() 入口（在线自然语音优先, 离线自动回退内置引擎） ---------- */
 let _speaking = false;
 async function speak(text, langId, rate, opts){
   try{
@@ -253,31 +444,43 @@ async function speak(text, langId, rate, opts){
     const textNorm = typeof text === 'string' ? text.trim() : String(text || '').trim();
     if(!textNorm) return false;
 
+    // 是否走在线引擎: 设置开启 且 当前在线
+    const online = (DB.prefs && DB.prefs.ttsOnline !== false)
+                && (typeof navigator === 'undefined' || navigator.onLine !== false);
+    const cacheable = (source === 'word' || source === 'sentence');
+    const baseKey = langId + '::' + (accent||'') + '::' + rate + '::' + textNorm.toLowerCase();
     let ok = false;
-    let blob = null;
 
-    // ---- ① IndexedDB 缓存命中 ----
-    if(source === 'word' || source === 'sentence'){
-      const cacheKey = langId + '::' + (rate===1 ? '' : rate+'::') + textNorm.toLowerCase();
-      blob = await AUD.blobGet(cacheKey);
+    // ---- ① IndexedDB 缓存命中 (语速已包含在缓存内容中, 播放不二次加速) ----
+    if(cacheable){
+      const engine = online ? 'etts' : 'mespeak';
+      const blob = await AUD.blobGet(engine + '::' + baseKey);
       if(blob && blob.size > 200){
-        try{
-          ok = await ME.playBlob(blob, rate);
-        }catch(e){ ok=false; blob=null; }
+        try{ ok = await ME.playBlob(blob, 1); }catch(e){ ok=false; }
       }
-      // ---- ② meSpeak.js 纯 JS 合成 WAV, 缓存并播放 ----
-      if(!ok){
-        blob = ME.synthesize(textNorm, langId, rate);
-        if(blob && blob.size > 200){
-          // 异步写缓存(不阻塞播放)
-          AUD.blobPut(cacheKey, blob).catch(()=>{});
+    }
+
+    // ---- ② 在线: 微软 Edge TTS 自然语音, 成功后缓存 ----
+    if(!ok && online){
+      try{
+        const blob = await ETTS.synthesize(textNorm, langId, rate, accent);
+        if(blob && blob.size > 500){
+          if(cacheable) AUD.blobPut('etts::' + baseKey, blob).catch(()=>{});
           try{ ok = await ME.playBlob(blob, 1); }catch(e){ ok=false; }
         }
-      }
-    } else {
-      // 非词/句类型(长文/口语题)直接合成, 缓存整句
-      blob = ME.synthesize(textNorm, langId, rate);
+      }catch(e){ /* 在线失败 → 系统语音/内置引擎 */ }
+    }
+
+    // ---- ③ 系统语音 (speechSynthesis, 设备本地, 音质自然但不可缓存) ----
+    if(!ok){
+      try{ ok = await SYS.speak(textNorm, langId, rate); }catch(e){ ok=false; }
+    }
+
+    // ---- ④ 最终回退: meSpeak.js 纯 JS 合成 WAV, 缓存并播放 ----
+    if(!ok){
+      const blob = ME.synthesize(textNorm, langId, rate);
       if(blob && blob.size > 200){
+        if(cacheable) AUD.blobPut('mespeak::' + baseKey, blob).catch(()=>{});
         try{ ok = await ME.playBlob(blob, 1); }catch(e){ ok=false; }
       }
     }
@@ -914,10 +1117,10 @@ function renderMe(){
           <div class="set-body"><div class="set-name">朗读语速</div><div class="set-sub">当前 ${U.ttsRate}x</div></div>
           <span class="set-arr">›</span>
         </button>
-        <div class="set-row" style="cursor:default">
+        <div class="set-row" onclick="haptic('light');toggleTtsOnline()">
           <span class="set-ic">🌐</span>
-          <div class="set-body"><div class="set-name">网络模式</div><div class="set-sub">${AUD.netMode ? '在线 · CDN音质好，缓存后离线可用' : '离线 · 使用系统发音/已缓存'}</div></div>
-          <span class="dot ${AUD.netMode?'on':''}"></span>
+          <div class="set-body"><div class="set-name">在线发音</div><div class="set-sub">${(DB.prefs.ttsOnline!==false) ? '开启 · 微软自然语音，需联网' : '关闭 · 使用内置离线合成引擎'}</div></div>
+          <label class="switch" onclick="event.stopPropagation()"><input type="checkbox" ${(DB.prefs.ttsOnline!==false)?'checked':''} onchange="haptic('light');toggleTtsOnline(this.checked)"><span class="slider"></span></label>
         </div>
         <div class="set-row" style="cursor:default">
           <span class="set-ic">🔈</span>
@@ -953,6 +1156,14 @@ function renderMe(){
 }
 
 function toggleAutoSpeak(v){ DB.prefs.autoSpeak = !!v; save(); toast(DB.prefs.autoSpeak?'自动朗读已开启':'自动朗读已关闭','🔈'); }
+
+function toggleTtsOnline(v){
+  if(!DB.prefs) DB.prefs = {};
+  DB.prefs.ttsOnline = (v === undefined) ? (DB.prefs.ttsOnline === false) : !!v;
+  save();
+  toast(DB.prefs.ttsOnline!==false ? '在线发音已开启 · 微软自然语音' : '已切换为内置离线发音','🔊');
+  render();
+}
 
 function toggleUserMenu(e){
   try{
@@ -997,13 +1208,13 @@ function showRateModal(){
         <button class="pill ${U.ttsRate===r?'on':''}" onclick="haptic('light');setRate(${r})">${r}x</button>`).join('')}
     </div>
     <div class="hint">
-      试听：
+      试听（联网时为微软自然语音，离线自动回退内置引擎）：
       <button class="pill" onclick="haptic('light');speak('Hello, this is a pronunciation test for your dictionary learning.', 'en', ${U.ttsRate||1}, {source:'word'})">🔊 English</button>
       <button class="pill" style="margin-top:6px" onclick="haptic('light');speak('こんにちは、日本語の発音テストです。', 'ja', ${U.ttsRate||1})">🔊 日本語</button>
     </div>
   `);
 }
-function setRate(r){ U.ttsRate = r; save(); toast(`语速 ${r}x`,'🔊'); render(); }
+function setRate(r){ U.ttsRate = r; save(); toast(`语速 ${r}x`,'🔊'); closeModalMask(); render(); }
 
 /* ---------- 通用模态框 ---------- */
 function showModal(title, html){
@@ -1277,7 +1488,7 @@ function renderPlayer(){
           <span class="pb-sub">${SRS_INTERVALS[Math.min(box,SRS_INTERVALS.length-1)]||30}天后到期</span>
         </button>
       </div>
-      <div class="pl-sw-hint">← 左滑=不认识 · 右滑=认识 · 点击翻面 · 长按发音</div>
+      <div class="pl-sw-hint">← 左滑=不认识 · 右滑=认识 · 上/下滑查看释义 · 长按发音</div>
     </div>`;
   }
   if(!P.flip && DB.prefs.autoSpeak){
@@ -1364,8 +1575,16 @@ function handleSwipe(x, y, dt, dx, dy){
   if(!_sd) return;
   dx = dx != null ? dx : ((x||0) - _sd.x);
   dy = dy != null ? dy : ((y||0) - _sd.y);
-  // 横滑判定: |dx| > 60 且 |dx| > |dy|
-  if(Math.abs(dx) < 60 || Math.abs(dx) < Math.abs(dy) || dt > 900) return;
+  if(dt > 900) return;
+  const adx = Math.abs(dx), ady = Math.abs(dy);
+  // 纵向滑动: 上滑/下滑 → 翻面查看释义 (与卡片提示"下滑查看释义"一致)
+  if(ady >= 48 && ady > adx){
+    haptic('medium');
+    flipCard();
+    return;
+  }
+  // 横向滑动: 左滑=不认识, 右滑=认识
+  if(adx < 60 || adx <= ady) return;
   haptic(dx<0?'heavy':'medium');
   if(dx < 0) gradeWord(false);
   else      gradeWord(true);
@@ -1721,7 +1940,7 @@ function exposeAPI(){
     w.exportData=exportData; w.confirmClear=confirmClear; w.render=render;
     w.backToLevels=backToLevels; w.openLesson=openLesson;
     w.startReview=startReview; w.go=go; w.openCourse=openCourse;
-    w.toggleAutoSpeak=toggleAutoSpeak; w.doClear=doClear; w.selectAccount=selectAccount;
+    w.toggleAutoSpeak=toggleAutoSpeak; w.toggleTtsOnline=toggleTtsOnline; w.doClear=doClear; w.selectAccount=selectAccount;
     w.showModal=showModal; w.closeModalMask=closeModalMask; w.importData=importData;
     w.showGoalModal=showGoalModal; w.showRateModal=showRateModal;
     w.toggleUserMenu=toggleUserMenu;

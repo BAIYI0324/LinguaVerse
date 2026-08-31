@@ -1,10 +1,10 @@
-/* 语界 LinguaVerse v5.0 · Service Worker
+/* 语界 LinguaVerse v5.1 · Service Worker
    策略:
    - 静态资源: 网络优先(保证升级即时生效), 失败回退缓存, 彻底离线可用
    - 缓存名带版本号, 升级时旧缓存自动清理, 杜绝"升级后白屏"
 */
-const CACHE_SHELL = 'yujie-shell-v5.0';
-const CACHE_RUNTIME = 'yujie-runtime-v5.0';
+const CACHE_SHELL = 'yujie-shell-v5.1';
+const CACHE_RUNTIME = 'yujie-runtime-v5.1';
 const SHELL = [
   './',
   './index.html',
