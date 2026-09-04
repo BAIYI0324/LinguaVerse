@@ -1,11 +1,10 @@
 /* ============================================================
-   语界 · 应用逻辑  v4.0
+   语界 · 应用逻辑  v5.1
    本地账号 · 不背单词式词卡 · SRS 间隔复习 · 澎湃美学 UI
-   🔊 发音（完全内置，零外部依赖）:
-      ① meSpeak.js 纯 JS eSpeak Emscripten 合成 WAV （不依赖任何已安装TTS软件/系统服务）
-      ② 首次合成后 WAV Blob 永久缓存到 IndexedDB, 下次命中秒开
-      ③ 不再联网请求词典 CDN, 不调用安卓系统 TTS
-   ✨ 体验: 左右滑动翻卡 / 长按发音 / 自动朗读 / 首页一键继续
+   🔊 发音 (④级链路, 音质优先逐级降级):
+      ① 设备本地 TTS (Android TextToSpeech) → ② speechSynthesis 系统语音
+      → ③ meSpeak.js 纯 JS 离线合成 + IndexedDB 缓存 → ④ (可选) 网络公共 TTS API
+   ✨ 体验: 点击/滑动翻卡 · 认识/不认识 SRS 评分 · 自动朗读 · 首页一键继续
    ============================================================ */
 'use strict';
 
@@ -105,8 +104,102 @@ function haptic(strength){
   }catch(e){}
 }
 /* ============================================================
-   🔊 语音 · 纯内置 meSpeak (零外部服务)
+   🔊 语音 · 多级 TTS 链路 (音质优先, 逐级降级, 永不失败)
+   ① 设备本地 TTS (Android TextToSpeech 桥, window.AndroidTTS)
+   ② speechSynthesis 系统语音 (桌面 Electron / 部分设备)
+   ③ meSpeak.js 纯 JS 离线合成 + IndexedDB 缓存 (零依赖兜底)
+   ④ (可选, 设置中开启) 网络公共 TTS API
    ============================================================ */
+let _nativeReady = false;
+window.__ttsReady = () => { _nativeReady = true; };
+window.__ttsDone  = (cbId) => { try{ const f = (window.__ttsCbs||{})[cbId]; if(f) f(); }catch(_){} };
+window.__ttsCbs = {};
+/** 调用设备本地 TTS, 完成回调后 resolve */
+function callNativeTTS(text, lang, rate){
+  return new Promise(res=>{
+    try{
+      const A = window.AndroidTTS;
+      if(!A || !_nativeReady) return res(false);
+      const cbId = 'c'+Date.now()+Math.random().toString(36).slice(2,7);
+      const to = setTimeout(()=>{ delete window.__ttsCbs[cbId]; res(false); }, 14000);
+      window.__ttsCbs[cbId] = () => { clearTimeout(to); delete window.__ttsCbs[cbId]; res(true); };
+      A.speak(text, lang, rate, cbId);
+    }catch(e){ res(false); }
+  });
+}
+function stopNativeTTS(){ try{ if(window.AndroidTTS) window.AndroidTTS.stop(); }catch(_){} }
+
+/** ② speechSynthesis 系统语音 (桌面音质好) */
+const SS = {
+  voices: [],
+  init(){
+    try{
+      if(!('speechSynthesis' in window)) return;
+      this.voices = speechSynthesis.getVoices() || [];
+      if(!this.voices.length) speechSynthesis.onvoiceschanged = () => { this.voices = speechSynthesis.getVoices() || []; };
+    }catch(_){}
+  },
+  voiceFor(lang){
+    const want = {en:'en', zh:'zh', ja:'ja', ko:'ko'}[lang];
+    if(!want) return null;
+    return this.voices.find(v => v.lang && v.lang.toLowerCase().startsWith(want)) || null;
+  },
+  speak(text, lang, rate){
+    return new Promise(res=>{
+      try{
+        if(!('speechSynthesis' in window)) return res(false);
+        const v = this.voiceFor(lang);
+        if(!v) return res(false);
+        const u = new SpeechSynthesisUtterance(text);
+        u.voice = v; u.rate = rate || 1; u.pitch = 1; u.volume = 1;
+        let done = false;
+        const f = ok => { if(done) return; done = true; clearTimeout(to); res(ok); };
+        const to = setTimeout(()=>{ try{ speechSynthesis.cancel(); }catch(_){} f(false); }, 14000);
+        u.onend = () => f(true);
+        u.onerror = () => f(false);
+        try{ speechSynthesis.cancel(); }catch(_){}
+        speechSynthesis.speak(u);
+      }catch(e){ res(false); }
+    });
+  },
+  stop(){ try{ if('speechSynthesis' in window) speechSynthesis.cancel(); }catch(_){} }
+};
+
+/** ④ 网络公共 TTS API (Google Translate 公共端点, 无需密钥; 仅在用户选择"在线优先"时启用) */
+const NET = {
+  langMap: {en:'en', zh:'zh-CN', ja:'ja', ko:'ko'},
+  play(text, lang, rate){
+    return new Promise(res=>{
+      try{
+        const tl = this.langMap[lang] || lang || 'en';
+        const url = 'https://translate.google.com/translate_tts?ie=UTF-8&client=tw-ob&tl='
+                  + encodeURIComponent(tl) + '&q=' + encodeURIComponent(String(text).slice(0,180));
+        const a = new Audio();
+        a.preload = 'auto';
+        a.src = url;
+        a.playbackRate = Math.max(0.5, Math.min(2, rate || 1));
+        let done = false;
+        const f = ok => { if(done) return; done = true; clearTimeout(to); try{ a.pause(); }catch(_){} try{ a.src=''; }catch(_){} res(ok); };
+        const to = setTimeout(()=>f(false), 14000);
+        a.onended = () => f(true);
+        a.onerror = () => f(false);
+        const p = a.play();
+        if(p && p.catch) p.catch(()=>f(false));
+      }catch(e){ res(false); }
+    });
+  },
+  stop(){ return true; }
+};
+
+/** 引擎偏好: auto=自动(本地优先) device=系统引擎优先 offline=纯内置 online=在线API优先 */
+function ttsPref(){ return (U && U.ttsEngine) || 'auto'; }
+const TTSE_META = {
+  auto:    {name:'自动 (推荐)', desc:'设备本地 → 系统语音 → 内置合成, 全程自动降级'},
+  device:  {name:'系统引擎优先', desc:'优先设备/系统语音, 失败才用内置合成'},
+  offline: {name:'纯离线内置',   desc:'只用内置合成, 不调用系统与网络, 最省电稳定'},
+  online:  {name:'在线高音质优先', desc:'网络公共 TTS 音质最好, 需联网; 失败回退内置'},
+};
+
 /* meSpeak 引导层 */
 const ME = {
   ready: false,
@@ -235,7 +328,7 @@ const AUD = {
   },
 };
 
-/* ---------- 公共 speak() 入口（零外部依赖） ---------- */
+/* ---------- 公共 speak() 入口 (④级链路) ---------- */
 let _speaking = false;
 async function speak(text, langId, rate, opts){
   try{
@@ -243,45 +336,56 @@ async function speak(text, langId, rate, opts){
     opts = opts || {};
     rate = rate || (U && U.ttsRate) || 1;
     langId = langId || (U && U.lang) || 'en';
-    // 停止之前的发音
-    if(_speaking){
-      try{ ME.stop(); }catch(_){}
-    }
-    _speaking = true;
-    const source = opts.source || 'word';
-    const accent = (U && U.accent) || '';
     const textNorm = typeof text === 'string' ? text.trim() : String(text || '').trim();
     if(!textNorm) return false;
 
-    let ok = false;
-    let blob = null;
+    // 停止之前的发音 (所有引擎)
+    if(_speaking){ stopSpeak(); }
+    _speaking = true;
 
-    // ---- ① IndexedDB 缓存命中 ----
+    const source = opts.source || 'word';
+    const pref = ttsPref();
+    let ok = false;
+
+    // ---- ① 设备本地 TTS (音质最好, 完全本地) ----
+    if(pref === 'auto' || pref === 'device'){
+      ok = await callNativeTTS(textNorm, langId, rate);
+      if(ok) return true;
+      // ---- ② speechSynthesis 系统语音 ----
+      ok = await SS.speak(textNorm, langId, rate);
+      if(ok) return true;
+    }
+
+    // ---- ④ 网络公共 TTS API (仅"在线优先"时前置) ----
+    if(pref === 'online'){
+      if(AUD.netMode){
+        ok = await NET.play(textNorm, langId, rate);
+        if(ok) return true;
+      }
+      // 在线失败 → 回退内置合成 (下面统一处理)
+    }
+
+    // ---- ③ meSpeak 纯 JS 离线合成 + IndexedDB 缓存 (永不失败的兜底) ----
+    let blob = null;
+    const cacheKey = langId + '::' + (rate===1 ? '' : rate+'::') + textNorm.toLowerCase();
     if(source === 'word' || source === 'sentence'){
-      const cacheKey = langId + '::' + (rate===1 ? '' : rate+'::') + textNorm.toLowerCase();
       blob = await AUD.blobGet(cacheKey);
       if(blob && blob.size > 200){
-        try{
-          ok = await ME.playBlob(blob, rate);
-        }catch(e){ ok=false; blob=null; }
+        try{ ok = await ME.playBlob(blob, rate); }catch(e){ ok=false; blob=null; }
       }
-      // ---- ② meSpeak.js 纯 JS 合成 WAV, 缓存并播放 ----
       if(!ok){
         blob = ME.synthesize(textNorm, langId, rate);
         if(blob && blob.size > 200){
-          // 异步写缓存(不阻塞播放)
-          AUD.blobPut(cacheKey, blob).catch(()=>{});
+          AUD.blobPut(cacheKey, blob).catch(()=>{});   // 异步缓存, 不阻塞播放
           try{ ok = await ME.playBlob(blob, 1); }catch(e){ ok=false; }
         }
       }
     } else {
-      // 非词/句类型(长文/口语题)直接合成, 缓存整句
       blob = ME.synthesize(textNorm, langId, rate);
       if(blob && blob.size > 200){
         try{ ok = await ME.playBlob(blob, 1); }catch(e){ ok=false; }
       }
     }
-
     return !!ok;
   }catch(e){
     return false;
@@ -289,12 +393,17 @@ async function speak(text, langId, rate, opts){
     setTimeout(()=>{ _speaking = false; }, 200);
   }
 }
+/** 停止所有引擎的播放 */
+function stopSpeak(){
+  stopNativeTTS();
+  SS.stop();
+  ME.stop();
+}
 
-/* __ttsReady 回调保留空实现(兼容旧安卓端, 不再依赖) */
-window.__ttsReady = function(){};
-/* 确保首次交互时 ME WebAudio 解锁 (安卓WebView首次必须用户手势才能播) */
-document.addEventListener('click', ()=>{ try{ ME.ensure(); }catch(_){} }, {once:true, capture:true});
-document.addEventListener('touchstart', ()=>{ try{ ME.ensure(); }catch(_){} }, {once:true, capture:true});
+/* 首次交互时初始化各引擎 (安卓WebView首次必须用户手势才能播) */
+document.addEventListener('click', ()=>{ try{ ME.ensure(); SS.init(); }catch(_){} }, {once:true, capture:true});
+document.addEventListener('touchstart', ()=>{ try{ ME.ensure(); SS.init(); }catch(_){} }, {once:true, capture:true});
+try{ SS.init(); }catch(_){}
 
 /* 网络状态监听 (保留作UI提示, 不影响TTS) */
 try{
@@ -612,25 +721,6 @@ function renderHome(){
     </section>
 
     <section class="section">
-      <div class="sec-title"><h3>🏆 成就进度</h3><a class="more" onclick="haptic('light');go('me')">全部 ›</a></div>
-      <div class="badge-row">
-        ${(ACHIEVEMENTS||[]).slice(0, 6).map(a=>{
-          const got = (U.badges||[]).includes(a.id);
-          let cur=0, tot=1;
-          try{ if(typeof a.prog === 'function'){ [cur,tot] = a.prog(U); } }catch(_){}
-          return `<div class="badge-card ${got?'on':''}">
-            <div class="b-ic">${a.icon}</div>
-            <div class="b-name">${esc(a.name)}</div>
-            <div class="b-prog">
-              <div class="b-bar"><i style="width:${Math.min(100,Math.round(cur/Math.max(1,tot)*100))}%"></i></div>
-              <span>${cur}/${tot}</span>
-            </div>
-          </div>`;
-        }).join('')}
-      </div>
-    </section>
-
-    <section class="section">
       <div class="daily-quote">
         <div class="dq-en">"${esc(quote.en)}"</div>
         <div class="dq-cn">— ${esc(quote.cn)}</div>
@@ -914,11 +1004,11 @@ function renderMe(){
           <div class="set-body"><div class="set-name">朗读语速</div><div class="set-sub">当前 ${U.ttsRate}x</div></div>
           <span class="set-arr">›</span>
         </button>
-        <div class="set-row" style="cursor:default">
-          <span class="set-ic">🌐</span>
-          <div class="set-body"><div class="set-name">网络模式</div><div class="set-sub">${AUD.netMode ? '在线 · CDN音质好，缓存后离线可用' : '离线 · 使用系统发音/已缓存'}</div></div>
-          <span class="dot ${AUD.netMode?'on':''}"></span>
-        </div>
+        <button class="set-row" onclick="haptic('light');showTtsEngineModal()">
+          <span class="set-ic">🔊</span>
+          <div class="set-body"><div class="set-name">发音引擎</div><div class="set-sub">${esc((TTSE_META[ttsPref()]||{}).name||'自动')}${AUD.netMode?'':' · 离线'}</div></div>
+          <span class="set-arr">›</span>
+        </button>
         <div class="set-row" style="cursor:default">
           <span class="set-ic">🔈</span>
           <div class="set-body"><div class="set-name">自动朗读</div><div class="set-sub">新词卡进入时自动发音</div></div>
@@ -947,7 +1037,7 @@ function renderMe(){
       </div>
     </section>
 
-    <div class="foot-note">语界 LinguaVerse v3.0 · 纯本地 · 开源 MIT</div>
+    <div class="foot-note">语界 LinguaVerse v5.1 · 本地优先 · 开源 GPL</div>
     <div style="height:36px"></div>
   </div>`;
 }
@@ -1004,6 +1094,24 @@ function showRateModal(){
   `);
 }
 function setRate(r){ U.ttsRate = r; save(); toast(`语速 ${r}x`,'🔊'); render(); }
+
+function showTtsEngineModal(){
+  showModal('发音引擎', `
+    <div class="ttse-list">
+      ${Object.keys(TTSE_META).map(k=>`
+        <button class="ttse-card ${ttsPref()===k?'on':''}" onclick="haptic('light');setTtsEngine('${k}'); closeModalMask();">
+          <div class="ttse-name">${esc(TTSE_META[k].name)}</div>
+          <div class="ttse-desc">${esc(TTSE_META[k].desc)}</div>
+          <div class="ttse-check">${ttsPref()===k?'✓':''}</div>
+        </button>`).join('')}
+    </div>
+    <div class="hint">切换后可点下方试听。若所选引擎不可用, 自动降级到内置合成, 发音永不缺席。</div>
+    <div class="row-btns" style="margin-top:14px">
+      <button class="btn btn-primary btn-lg" onclick="haptic('medium');closeModalMask();speak('Hello, pronunciation test.', 'en', U.ttsRate, {source:'word'})">试听 🔊</button>
+    </div>
+  `);
+}
+function setTtsEngine(k){ U.ttsEngine = k; save(); toast('发音引擎: ' + TTSE_META[k].name, '🔊'); render(); }
 
 /* ---------- 通用模态框 ---------- */
 function showModal(title, html){
@@ -1724,6 +1832,7 @@ function exposeAPI(){
     w.toggleAutoSpeak=toggleAutoSpeak; w.doClear=doClear; w.selectAccount=selectAccount;
     w.showModal=showModal; w.closeModalMask=closeModalMask; w.importData=importData;
     w.showGoalModal=showGoalModal; w.showRateModal=showRateModal;
+    w.showTtsEngineModal=showTtsEngineModal; w.setTtsEngine=setTtsEngine;
     w.toggleUserMenu=toggleUserMenu;
     w.cardMouseDown=cardMouseDown; w.cardTouchStart=cardTouchStart;
     w.cardTouchEnd=cardTouchEnd; w.cardTouchMove=cardTouchMove;

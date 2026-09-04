@@ -182,3 +182,24 @@ html.desktop .toast{
 }
 html.desktop #modalMask .modal,
 html.desktop .modal-mask .modal{border-radius:8px}
+
+/* ---------- 发音引擎选择 (Fluent) ---------- */
+html.desktop .ttse-card{
+  border-radius:4px;
+  border:1px solid rgba(0,0,0,.09);
+  background:rgba(249,249,249,.75);
+}
+html.desktop .ttse-card:hover{border-color:rgba(0,103,192,.4);background:rgba(239,246,252,.6)}
+html.desktop .ttse-card:active{transform:none;background:rgba(0,103,192,.1)}
+html.desktop .ttse-card.on{background:rgba(0,103,192,.09);border-color:var(--primary)}
+html.desktop .ttse-check{border-radius:50%}
+
+/* ---------- 其他交互反馈 (Fluent hover) ---------- */
+html.desktop .cc-card:hover,
+html.desktop .level-card:hover,
+html.desktop .lesson-card:hover,
+html.desktop .rec-card:hover{border-color:rgba(0,103,192,.28);background:rgba(255,255,255,.92)}
+html.desktop .set-row:hover{background:rgba(0,0,0,.045)}
+html.desktop .goal-card:hover{border-color:rgba(0,103,192,.3)}
+html.desktop .lang-card:hover{border-color:rgba(0,103,192,.3)}
+html.desktop .dq-speak:hover{background:var(--primary-soft);color:var(--primary)}

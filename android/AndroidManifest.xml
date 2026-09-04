@@ -1,15 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
     package="com.yujie.app"
-    android:versionCode="6"
-  android:versionName="5.0.0">
+    android:versionCode="7"
+    android:versionName="5.1.0">
 
-  <!-- 语界 v4.0 纯内置离线版: 运行不依赖任何外部服务/系统TTS软件
-       保留 INTERNET 权限为可选联网功能 (例如用户手动上传词典/备份), 离线学习完全不依赖它。
-       其余 TTS / 麦克风相关权限已全部移除,真正做到"安装即用"。 -->
+  <!-- 语界 v5.1: TTS 链路 = 设备本地TTS → speechSynthesis → 内置meSpeak → (可选)网络API
+       INTERNET 为可选权限: 离线学习完全不依赖; 仅"在线高音质TTS"与数据备份需要。 -->
   <uses-permission android:name="android.permission.INTERNET"/>
   <uses-permission android:name="android.permission.ACCESS_NETWORK_STATE"/>
   <uses-sdk android:minSdkVersion="24" android:targetSdkVersion="34"/>
+
+  <!-- Android 11+ 需要 queries 才能发现系统 TTS 引擎 -->
+  <queries>
+    <intent>
+      <action android:name="android.intent.action.TTS_SERVICE"/>
+    </intent>
+  </queries>
 
   <application
       android:label="语界"
